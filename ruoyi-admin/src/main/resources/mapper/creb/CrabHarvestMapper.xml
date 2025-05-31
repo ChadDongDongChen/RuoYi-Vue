@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.web.creb.mapper.CrabHarvestMapper">
+    
+    <resultMap type="CrabHarvest" id="CrabHarvestResult">
+        <result property="recordId"    column="record_id"    />
+        <result property="batchId"    column="batch_id"    />
+        <result property="harvestDate"    column="harvest_date"    />
+        <result property="totalWeight"    column="total_weight"    />
+        <result property="avgWeight"    column="avg_weight"    />
+        <result property="survivalRate"    column="survival_rate"    />
+        <result property="operator"    column="operator"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectCrabHarvestVo">
+        select record_id, batch_id, harvest_date, total_weight, avg_weight, survival_rate, operator, create_time, remark from crab_harvest
+    </sql>
+
+    <select id="selectCrabHarvestList" parameterType="CrabHarvest" resultMap="CrabHarvestResult">
+        <include refid="selectCrabHarvestVo"/>
+        <where>  
+            <if test="batchId != null "> and batch_id = #{batchId}</if>
+            <if test="harvestDate != null "> and harvest_date = #{harvestDate}</if>
+            <if test="totalWeight != null "> and total_weight = #{totalWeight}</if>
+            <if test="avgWeight != null "> and avg_weight = #{avgWeight}</if>
+            <if test="survivalRate != null "> and survival_rate = #{survivalRate}</if>
+            <if test="operator != null  and operator != ''"> and operator = #{operator}</if>
+        </where>
+    </select>
+    
+    <select id="selectCrabHarvestByRecordId" parameterType="Long" resultMap="CrabHarvestResult">
+        <include refid="selectCrabHarvestVo"/>
+        where record_id = #{recordId}
+    </select>
+
+    <insert id="insertCrabHarvest" parameterType="CrabHarvest" useGeneratedKeys="true" keyProperty="recordId">
+        insert into crab_harvest
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="batchId != null">batch_id,</if>
+            <if test="harvestDate != null">harvest_date,</if>
+            <if test="totalWeight != null">total_weight,</if>
+            <if test="avgWeight != null">avg_weight,</if>
+            <if test="survivalRate != null">survival_rate,</if>
+            <if test="operator != null and operator != ''">operator,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="batchId != null">#{batchId},</if>
+            <if test="harvestDate != null">#{harvestDate},</if>
+            <if test="totalWeight != null">#{totalWeight},</if>
+            <if test="avgWeight != null">#{avgWeight},</if>
+            <if test="survivalRate != null">#{survivalRate},</if>
+            <if test="operator != null and operator != ''">#{operator},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCrabHarvest" parameterType="CrabHarvest">
+        update crab_harvest
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="batchId != null">batch_id = #{batchId},</if>
+            <if test="harvestDate != null">harvest_date = #{harvestDate},</if>
+            <if test="totalWeight != null">total_weight = #{totalWeight},</if>
+            <if test="avgWeight != null">avg_weight = #{avgWeight},</if>
+            <if test="survivalRate != null">survival_rate = #{survivalRate},</if>
+            <if test="operator != null and operator != ''">operator = #{operator},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where record_id = #{recordId}
+    </update>
+
+    <delete id="deleteCrabHarvestByRecordId" parameterType="Long">
+        delete from crab_harvest where record_id = #{recordId}
+    </delete>
+
+    <delete id="deleteCrabHarvestByRecordIds" parameterType="String">
+        delete from crab_harvest where record_id in 
+        <foreach item="recordId" collection="array" open="(" separator="," close=")">
+            #{recordId}
+        </foreach>
+    </delete>
+</mapper>

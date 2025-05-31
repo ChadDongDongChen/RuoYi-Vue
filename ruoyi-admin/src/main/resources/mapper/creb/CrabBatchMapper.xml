@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.web.creb.mapper.CrabBatchMapper">
+    
+    <resultMap type="CrabBatch" id="CrabBatchResult">
+        <result property="batchId"    column="batch_id"    />
+        <result property="batchName"    column="batch_name"    />
+        <result property="poolId"    column="pool_id"    />
+        <result property="crabType"    column="crab_type"    />
+        <result property="initialCount"    column="initial_count"    />
+        <result property="initialWeight"    column="initial_weight"    />
+        <result property="startDate"    column="start_date"    />
+        <result property="expectedDate"    column="expected_date"    />
+        <result property="status"    column="status"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectCrabBatchVo">
+        select batch_id, batch_name, pool_id, crab_type, initial_count, initial_weight, start_date, expected_date, status, create_by, create_time, update_by, update_time, remark from crab_batch
+    </sql>
+
+    <select id="selectCrabBatchList" parameterType="CrabBatch" resultMap="CrabBatchResult">
+        <include refid="selectCrabBatchVo"/>
+        <where>  
+            <if test="batchName != null  and batchName != ''"> and batch_name like concat('%', #{batchName}, '%')</if>
+            <if test="poolId != null "> and pool_id = #{poolId}</if>
+            <if test="crabType != null  and crabType != ''"> and crab_type = #{crabType}</if>
+            <if test="initialCount != null "> and initial_count = #{initialCount}</if>
+            <if test="initialWeight != null "> and initial_weight = #{initialWeight}</if>
+            <if test="startDate != null "> and start_date = #{startDate}</if>
+            <if test="expectedDate != null "> and expected_date = #{expectedDate}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectCrabBatchByBatchId" parameterType="Long" resultMap="CrabBatchResult">
+        <include refid="selectCrabBatchVo"/>
+        where batch_id = #{batchId}
+    </select>
+
+    <insert id="insertCrabBatch" parameterType="CrabBatch" useGeneratedKeys="true" keyProperty="batchId">
+        insert into crab_batch
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="batchName != null and batchName != ''">batch_name,</if>
+            <if test="poolId != null">pool_id,</if>
+            <if test="crabType != null and crabType != ''">crab_type,</if>
+            <if test="initialCount != null">initial_count,</if>
+            <if test="initialWeight != null">initial_weight,</if>
+            <if test="startDate != null">start_date,</if>
+            <if test="expectedDate != null">expected_date,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="batchName != null and batchName != ''">#{batchName},</if>
+            <if test="poolId != null">#{poolId},</if>
+            <if test="crabType != null and crabType != ''">#{crabType},</if>
+            <if test="initialCount != null">#{initialCount},</if>
+            <if test="initialWeight != null">#{initialWeight},</if>
+            <if test="startDate != null">#{startDate},</if>
+            <if test="expectedDate != null">#{expectedDate},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCrabBatch" parameterType="CrabBatch">
+        update crab_batch
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="batchName != null and batchName != ''">batch_name = #{batchName},</if>
+            <if test="poolId != null">pool_id = #{poolId},</if>
+            <if test="crabType != null and crabType != ''">crab_type = #{crabType},</if>
+            <if test="initialCount != null">initial_count = #{initialCount},</if>
+            <if test="initialWeight != null">initial_weight = #{initialWeight},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="expectedDate != null">expected_date = #{expectedDate},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where batch_id = #{batchId}
+    </update>
+
+    <delete id="deleteCrabBatchByBatchId" parameterType="Long">
+        delete from crab_batch where batch_id = #{batchId}
+    </delete>
+
+    <delete id="deleteCrabBatchByBatchIds" parameterType="String">
+        delete from crab_batch where batch_id in 
+        <foreach item="batchId" collection="array" open="(" separator="," close=")">
+            #{batchId}
+        </foreach>
+    </delete>
+</mapper>

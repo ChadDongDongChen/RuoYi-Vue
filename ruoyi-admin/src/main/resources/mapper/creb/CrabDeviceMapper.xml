@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.web.creb.mapper.CrabDeviceMapper">
+    
+    <resultMap type="CrabDevice" id="CrabDeviceResult">
+        <result property="deviceId"    column="device_id"    />
+        <result property="deviceName"    column="device_name"    />
+        <result property="deviceType"    column="device_type"    />
+        <result property="poolId"    column="pool_id"    />
+        <result property="deviceStatus"    column="device_status"    />
+        <result property="lastOnlineTime"    column="last_online_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectCrabDeviceVo">
+        select device_id, device_name, device_type, pool_id, device_status, last_online_time, create_by, create_time, update_by, update_time, remark from crab_device
+    </sql>
+
+    <select id="selectCrabDeviceList" parameterType="CrabDevice" resultMap="CrabDeviceResult">
+        <include refid="selectCrabDeviceVo"/>
+        <where>  
+            <if test="deviceName != null  and deviceName != ''"> and device_name like concat('%', #{deviceName}, '%')</if>
+            <if test="deviceType != null  and deviceType != ''"> and device_type = #{deviceType}</if>
+            <if test="poolId != null "> and pool_id = #{poolId}</if>
+            <if test="deviceStatus != null  and deviceStatus != ''"> and device_status = #{deviceStatus}</if>
+            <if test="lastOnlineTime != null "> and last_online_time = #{lastOnlineTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectCrabDeviceByDeviceId" parameterType="Long" resultMap="CrabDeviceResult">
+        <include refid="selectCrabDeviceVo"/>
+        where device_id = #{deviceId}
+    </select>
+
+    <insert id="insertCrabDevice" parameterType="CrabDevice" useGeneratedKeys="true" keyProperty="deviceId">
+        insert into crab_device
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deviceName != null and deviceName != ''">device_name,</if>
+            <if test="deviceType != null and deviceType != ''">device_type,</if>
+            <if test="poolId != null">pool_id,</if>
+            <if test="deviceStatus != null">device_status,</if>
+            <if test="lastOnlineTime != null">last_online_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deviceName != null and deviceName != ''">#{deviceName},</if>
+            <if test="deviceType != null and deviceType != ''">#{deviceType},</if>
+            <if test="poolId != null">#{poolId},</if>
+            <if test="deviceStatus != null">#{deviceStatus},</if>
+            <if test="lastOnlineTime != null">#{lastOnlineTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCrabDevice" parameterType="CrabDevice">
+        update crab_device
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="deviceName != null and deviceName != ''">device_name = #{deviceName},</if>
+            <if test="deviceType != null and deviceType != ''">device_type = #{deviceType},</if>
+            <if test="poolId != null">pool_id = #{poolId},</if>
+            <if test="deviceStatus != null">device_status = #{deviceStatus},</if>
+            <if test="lastOnlineTime != null">last_online_time = #{lastOnlineTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where device_id = #{deviceId}
+    </update>
+
+    <delete id="deleteCrabDeviceByDeviceId" parameterType="Long">
+        delete from crab_device where device_id = #{deviceId}
+    </delete>
+
+    <delete id="deleteCrabDeviceByDeviceIds" parameterType="String">
+        delete from crab_device where device_id in 
+        <foreach item="deviceId" collection="array" open="(" separator="," close=")">
+            #{deviceId}
+        </foreach>
+    </delete>
+</mapper>

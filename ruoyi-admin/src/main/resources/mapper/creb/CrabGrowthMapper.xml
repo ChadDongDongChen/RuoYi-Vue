@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.web.creb.mapper.CrabGrowthMapper">
+    
+    <resultMap type="CrabGrowth" id="CrabGrowthResult">
+        <result property="recordId"    column="record_id"    />
+        <result property="batchId"    column="batch_id"    />
+        <result property="sampleCount"    column="sample_count"    />
+        <result property="avgWeight"    column="avg_weight"    />
+        <result property="mortalityRate"    column="mortality_rate"    />
+        <result property="recordDate"    column="record_date"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectCrabGrowthVo">
+        select record_id, batch_id, sample_count, avg_weight, mortality_rate, record_date, create_by, create_time, remark from crab_growth
+    </sql>
+
+    <select id="selectCrabGrowthList" parameterType="CrabGrowth" resultMap="CrabGrowthResult">
+        <include refid="selectCrabGrowthVo"/>
+        <where>  
+            <if test="batchId != null "> and batch_id = #{batchId}</if>
+            <if test="sampleCount != null "> and sample_count = #{sampleCount}</if>
+            <if test="avgWeight != null "> and avg_weight = #{avgWeight}</if>
+            <if test="mortalityRate != null "> and mortality_rate = #{mortalityRate}</if>
+            <if test="recordDate != null "> and record_date = #{recordDate}</if>
+        </where>
+    </select>
+    
+    <select id="selectCrabGrowthByRecordId" parameterType="Long" resultMap="CrabGrowthResult">
+        <include refid="selectCrabGrowthVo"/>
+        where record_id = #{recordId}
+    </select>
+
+    <insert id="insertCrabGrowth" parameterType="CrabGrowth" useGeneratedKeys="true" keyProperty="recordId">
+        insert into crab_growth
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="batchId != null">batch_id,</if>
+            <if test="sampleCount != null">sample_count,</if>
+            <if test="avgWeight != null">avg_weight,</if>
+            <if test="mortalityRate != null">mortality_rate,</if>
+            <if test="recordDate != null">record_date,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="batchId != null">#{batchId},</if>
+            <if test="sampleCount != null">#{sampleCount},</if>
+            <if test="avgWeight != null">#{avgWeight},</if>
+            <if test="mortalityRate != null">#{mortalityRate},</if>
+            <if test="recordDate != null">#{recordDate},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCrabGrowth" parameterType="CrabGrowth">
+        update crab_growth
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="batchId != null">batch_id = #{batchId},</if>
+            <if test="sampleCount != null">sample_count = #{sampleCount},</if>
+            <if test="avgWeight != null">avg_weight = #{avgWeight},</if>
+            <if test="mortalityRate != null">mortality_rate = #{mortalityRate},</if>
+            <if test="recordDate != null">record_date = #{recordDate},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where record_id = #{recordId}
+    </update>
+
+    <delete id="deleteCrabGrowthByRecordId" parameterType="Long">
+        delete from crab_growth where record_id = #{recordId}
+    </delete>
+
+    <delete id="deleteCrabGrowthByRecordIds" parameterType="String">
+        delete from crab_growth where record_id in 
+        <foreach item="recordId" collection="array" open="(" separator="," close=")">
+            #{recordId}
+        </foreach>
+    </delete>
+</mapper>

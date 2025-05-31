@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.web.creb.mapper.CrabEnvironmentMapper">
+    
+    <resultMap type="CrabEnvironment" id="CrabEnvironmentResult">
+        <result property="dataId"    column="data_id"    />
+        <result property="deviceId"    column="device_id"    />
+        <result property="poolId"    column="pool_id"    />
+        <result property="dataType"    column="data_type"    />
+        <result property="dataValue"    column="data_value"    />
+        <result property="collectTime"    column="collect_time"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectCrabEnvironmentVo">
+        select data_id, device_id, pool_id, data_type, data_value, collect_time, create_time from crab_environment
+    </sql>
+
+    <select id="selectCrabEnvironmentList" parameterType="CrabEnvironment" resultMap="CrabEnvironmentResult">
+        <include refid="selectCrabEnvironmentVo"/>
+        <where>  
+            <if test="deviceId != null "> and device_id = #{deviceId}</if>
+            <if test="poolId != null "> and pool_id = #{poolId}</if>
+            <if test="dataType != null  and dataType != ''"> and data_type = #{dataType}</if>
+            <if test="dataValue != null "> and data_value = #{dataValue}</if>
+            <if test="collectTime != null "> and collect_time = #{collectTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectCrabEnvironmentByDataId" parameterType="Long" resultMap="CrabEnvironmentResult">
+        <include refid="selectCrabEnvironmentVo"/>
+        where data_id = #{dataId}
+    </select>
+
+    <insert id="insertCrabEnvironment" parameterType="CrabEnvironment" useGeneratedKeys="true" keyProperty="dataId">
+        insert into crab_environment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deviceId != null">device_id,</if>
+            <if test="poolId != null">pool_id,</if>
+            <if test="dataType != null and dataType != ''">data_type,</if>
+            <if test="dataValue != null">data_value,</if>
+            <if test="collectTime != null">collect_time,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deviceId != null">#{deviceId},</if>
+            <if test="poolId != null">#{poolId},</if>
+            <if test="dataType != null and dataType != ''">#{dataType},</if>
+            <if test="dataValue != null">#{dataValue},</if>
+            <if test="collectTime != null">#{collectTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCrabEnvironment" parameterType="CrabEnvironment">
+        update crab_environment
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="poolId != null">pool_id = #{poolId},</if>
+            <if test="dataType != null and dataType != ''">data_type = #{dataType},</if>
+            <if test="dataValue != null">data_value = #{dataValue},</if>
+            <if test="collectTime != null">collect_time = #{collectTime},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where data_id = #{dataId}
+    </update>
+
+    <delete id="deleteCrabEnvironmentByDataId" parameterType="Long">
+        delete from crab_environment where data_id = #{dataId}
+    </delete>
+
+    <delete id="deleteCrabEnvironmentByDataIds" parameterType="String">
+        delete from crab_environment where data_id in 
+        <foreach item="dataId" collection="array" open="(" separator="," close=")">
+            #{dataId}
+        </foreach>
+    </delete>
+</mapper>

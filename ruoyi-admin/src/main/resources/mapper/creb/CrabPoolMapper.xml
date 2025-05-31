@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.web.creb.mapper.CrabPoolMapper">
+    
+    <resultMap type="CrabPool" id="CrabPoolResult">
+        <result property="poolId"    column="pool_id"    />
+        <result property="poolName"    column="pool_name"    />
+        <result property="poolArea"    column="pool_area"    />
+        <result property="poolDepth"    column="pool_depth"    />
+        <result property="poolType"    column="pool_type"    />
+        <result property="status"    column="status"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectCrabPoolVo">
+        select pool_id, pool_name, pool_area, pool_depth, pool_type, status, create_by, create_time, update_by, update_time, remark from crab_pool
+    </sql>
+
+    <select id="selectCrabPoolList" parameterType="CrabPool" resultMap="CrabPoolResult">
+        <include refid="selectCrabPoolVo"/>
+        <where>  
+            <if test="poolName != null  and poolName != ''"> and pool_name like concat('%', #{poolName}, '%')</if>
+            <if test="poolArea != null "> and pool_area = #{poolArea}</if>
+            <if test="poolDepth != null "> and pool_depth = #{poolDepth}</if>
+            <if test="poolType != null  and poolType != ''"> and pool_type = #{poolType}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectCrabPoolByPoolId" parameterType="Long" resultMap="CrabPoolResult">
+        <include refid="selectCrabPoolVo"/>
+        where pool_id = #{poolId}
+    </select>
+
+    <insert id="insertCrabPool" parameterType="CrabPool" useGeneratedKeys="true" keyProperty="poolId">
+        insert into crab_pool
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="poolName != null and poolName != ''">pool_name,</if>
+            <if test="poolArea != null">pool_area,</if>
+            <if test="poolDepth != null">pool_depth,</if>
+            <if test="poolType != null">pool_type,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="poolName != null and poolName != ''">#{poolName},</if>
+            <if test="poolArea != null">#{poolArea},</if>
+            <if test="poolDepth != null">#{poolDepth},</if>
+            <if test="poolType != null">#{poolType},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCrabPool" parameterType="CrabPool">
+        update crab_pool
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="poolName != null and poolName != ''">pool_name = #{poolName},</if>
+            <if test="poolArea != null">pool_area = #{poolArea},</if>
+            <if test="poolDepth != null">pool_depth = #{poolDepth},</if>
+            <if test="poolType != null">pool_type = #{poolType},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where pool_id = #{poolId}
+    </update>
+
+    <delete id="deleteCrabPoolByPoolId" parameterType="Long">
+        delete from crab_pool where pool_id = #{poolId}
+    </delete>
+
+    <delete id="deleteCrabPoolByPoolIds" parameterType="String">
+        delete from crab_pool where pool_id in 
+        <foreach item="poolId" collection="array" open="(" separator="," close=")">
+            #{poolId}
+        </foreach>
+    </delete>
+</mapper>

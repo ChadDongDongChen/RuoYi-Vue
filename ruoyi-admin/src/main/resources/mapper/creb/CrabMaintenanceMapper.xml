@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.web.creb.mapper.CrabMaintenanceMapper">
+    
+    <resultMap type="CrabMaintenance" id="CrabMaintenanceResult">
+        <result property="recordId"    column="record_id"    />
+        <result property="poolId"    column="pool_id"    />
+        <result property="maintenanceType"    column="maintenance_type"    />
+        <result property="maintenanceDate"    column="maintenance_date"    />
+        <result property="operator"    column="operator"    />
+        <result property="cost"    column="cost"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectCrabMaintenanceVo">
+        select record_id, pool_id, maintenance_type, maintenance_date, operator, cost, create_time, remark from crab_maintenance
+    </sql>
+
+    <select id="selectCrabMaintenanceList" parameterType="CrabMaintenance" resultMap="CrabMaintenanceResult">
+        <include refid="selectCrabMaintenanceVo"/>
+        <where>  
+            <if test="poolId != null "> and pool_id = #{poolId}</if>
+            <if test="maintenanceType != null  and maintenanceType != ''"> and maintenance_type = #{maintenanceType}</if>
+            <if test="maintenanceDate != null "> and maintenance_date = #{maintenanceDate}</if>
+            <if test="operator != null  and operator != ''"> and operator = #{operator}</if>
+            <if test="cost != null "> and cost = #{cost}</if>
+        </where>
+    </select>
+    
+    <select id="selectCrabMaintenanceByRecordId" parameterType="Long" resultMap="CrabMaintenanceResult">
+        <include refid="selectCrabMaintenanceVo"/>
+        where record_id = #{recordId}
+    </select>
+
+    <insert id="insertCrabMaintenance" parameterType="CrabMaintenance" useGeneratedKeys="true" keyProperty="recordId">
+        insert into crab_maintenance
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="poolId != null">pool_id,</if>
+            <if test="maintenanceType != null and maintenanceType != ''">maintenance_type,</if>
+            <if test="maintenanceDate != null">maintenance_date,</if>
+            <if test="operator != null and operator != ''">operator,</if>
+            <if test="cost != null">cost,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="poolId != null">#{poolId},</if>
+            <if test="maintenanceType != null and maintenanceType != ''">#{maintenanceType},</if>
+            <if test="maintenanceDate != null">#{maintenanceDate},</if>
+            <if test="operator != null and operator != ''">#{operator},</if>
+            <if test="cost != null">#{cost},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCrabMaintenance" parameterType="CrabMaintenance">
+        update crab_maintenance
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="poolId != null">pool_id = #{poolId},</if>
+            <if test="maintenanceType != null and maintenanceType != ''">maintenance_type = #{maintenanceType},</if>
+            <if test="maintenanceDate != null">maintenance_date = #{maintenanceDate},</if>
+            <if test="operator != null and operator != ''">operator = #{operator},</if>
+            <if test="cost != null">cost = #{cost},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where record_id = #{recordId}
+    </update>
+
+    <delete id="deleteCrabMaintenanceByRecordId" parameterType="Long">
+        delete from crab_maintenance where record_id = #{recordId}
+    </delete>
+
+    <delete id="deleteCrabMaintenanceByRecordIds" parameterType="String">
+        delete from crab_maintenance where record_id in 
+        <foreach item="recordId" collection="array" open="(" separator="," close=")">
+            #{recordId}
+        </foreach>
+    </delete>
+</mapper>

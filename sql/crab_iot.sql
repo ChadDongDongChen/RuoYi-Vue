@@ -39,8 +39,8 @@ create table crab_device (
 -- ----------------------------
 -- 3、环境数据记录表
 -- ----------------------------
-drop table if exists crab_environment_data;
-create table crab_environment_data (
+drop table if exists crab_environment;
+create table crab_environment (
   data_id           bigint(20)      not null auto_increment    comment '数据ID',
   device_id         bigint(20)      not null                   comment '设备ID',
   pool_id           bigint(20)      not null                   comment '养殖池ID',
@@ -54,8 +54,8 @@ create table crab_environment_data (
 -- ----------------------------
 -- 4、投喂记录表
 -- ----------------------------
-drop table if exists crab_feeding_record;
-create table crab_feeding_record (
+drop table if exists crab_feeding;
+create table crab_feeding (
   record_id         bigint(20)      not null auto_increment    comment '记录ID',
   pool_id           bigint(20)      not null                   comment '养殖池ID',
   feed_type         varchar(50)     not null                   comment '饲料类型',
@@ -92,8 +92,8 @@ create table crab_batch (
 -- ----------------------------
 -- 6、螃蟹生长记录表
 -- ----------------------------
-drop table if exists crab_growth_record;
-create table crab_growth_record (
+drop table if exists crab_growth;
+create table crab_growth (
   record_id         bigint(20)      not null auto_increment    comment '记录ID',
   batch_id          bigint(20)      not null                   comment '批次ID',
   sample_count      int(11)         not null                   comment '采样数量',
@@ -109,8 +109,8 @@ create table crab_growth_record (
 -- ----------------------------
 -- 7、异常预警记录表
 -- ----------------------------
-drop table if exists crab_alert_record;
-create table crab_alert_record (
+drop table if exists crab_alert;
+create table crab_alert (
   alert_id          bigint(20)      not null auto_increment    comment '预警ID',
   pool_id           bigint(20)      not null                   comment '养殖池ID',
   device_id         bigint(20)      not null                   comment '设备ID',
@@ -129,8 +129,8 @@ create table crab_alert_record (
 -- ----------------------------
 -- 8、养殖池维护记录表
 -- ----------------------------
-drop table if exists crab_maintenance_record;
-create table crab_maintenance_record (
+drop table if exists crab_maintenance;
+create table crab_maintenance (
   record_id         bigint(20)      not null auto_increment    comment '记录ID',
   pool_id           bigint(20)      not null                   comment '养殖池ID',
   maintenance_type  varchar(50)     not null                   comment '维护类型',
@@ -145,8 +145,8 @@ create table crab_maintenance_record (
 -- ----------------------------
 -- 9、收获记录表
 -- ----------------------------
-drop table if exists crab_harvest_record;
-create table crab_harvest_record (
+drop table if exists crab_harvest;
+create table crab_harvest (
   record_id         bigint(20)      not null auto_increment    comment '记录ID',
   batch_id          bigint(20)      not null                   comment '批次ID',
   harvest_date      date            not null                   comment '收获日期',
@@ -162,8 +162,8 @@ create table crab_harvest_record (
 -- ----------------------------
 -- 10、养殖成本记录表
 -- ----------------------------
-drop table if exists crab_cost_record;
-create table crab_cost_record (
+drop table if exists crab_cost;
+create table crab_cost (
   record_id         bigint(20)      not null auto_increment    comment '记录ID',
   batch_id          bigint(20)      not null                   comment '批次ID',
   cost_type         varchar(50)     not null                   comment '成本类型',
@@ -192,38 +192,38 @@ insert into crab_device values(103, '温度传感器2', '1', 101, '0', sysdate()
 insert into crab_device values(104, '水质监测器2', '3', 101, '0', sysdate(), 'admin', sysdate(), '', null, '2号池水质监测器');
 
 -- 环境数据记录
-insert into crab_environment_data values(100, 100, 100, '1', 25.50, sysdate(), sysdate());
-insert into crab_environment_data values(101, 101, 100, '3', 7.20, sysdate(), sysdate());
-insert into crab_environment_data values(102, 102, 100, '4', 6.80, sysdate(), sysdate());
-insert into crab_environment_data values(103, 103, 101, '1', 26.20, sysdate(), sysdate());
-insert into crab_environment_data values(104, 104, 101, '3', 7.50, sysdate(), sysdate());
+insert into crab_environment values(100, 100, 100, '1', 25.50, sysdate(), sysdate());
+insert into crab_environment values(101, 101, 100, '3', 7.20, sysdate(), sysdate());
+insert into crab_environment values(102, 102, 100, '4', 6.80, sysdate(), sysdate());
+insert into crab_environment values(103, 103, 101, '1', 26.20, sysdate(), sysdate());
+insert into crab_environment values(104, 104, 101, '3', 7.50, sysdate(), sysdate());
 
 -- 螃蟹批次信息
 insert into crab_batch values(100, '2024春季批次1', 100, '大闸蟹', 1000, 50.00, '2024-03-01', '2024-09-01', '0', 'admin', sysdate(), '', null, '春季养殖批次');
 insert into crab_batch values(101, '2024春季批次2', 101, '大闸蟹', 1200, 45.00, '2024-03-15', '2024-09-15', '0', 'admin', sysdate(), '', null, '春季养殖批次');
 
 -- 投喂记录
-insert into crab_feeding_record values(100, 100, '专用饲料', 5.00, sysdate(), 'admin', sysdate(), '日常投喂');
-insert into crab_feeding_record values(101, 100, '小鱼虾', 3.00, sysdate(), 'admin', sysdate(), '补充蛋白质');
-insert into crab_feeding_record values(102, 101, '专用饲料', 6.00, sysdate(), 'admin', sysdate(), '日常投喂');
+insert into crab_feeding values(100, 100, '专用饲料', 5.00, sysdate(), 'admin', sysdate(), '日常投喂');
+insert into crab_feeding values(101, 100, '小鱼虾', 3.00, sysdate(), 'admin', sysdate(), '补充蛋白质');
+insert into crab_feeding values(102, 101, '专用饲料', 6.00, sysdate(), 'admin', sysdate(), '日常投喂');
 
 -- 生长记录
-insert into crab_growth_record values(100, 100, 50, 75.50, 2.50, sysdate(), 'admin', sysdate(), '月度生长记录');
-insert into crab_growth_record values(101, 101, 60, 65.80, 3.00, sysdate(), 'admin', sysdate(), '月度生长记录');
+insert into crab_growth values(100, 100, 50, 75.50, 2.50, sysdate(), 'admin', sysdate(), '月度生长记录');
+insert into crab_growth values(101, 101, 60, 65.80, 3.00, sysdate(), 'admin', sysdate(), '月度生长记录');
 
 -- 异常预警记录
-insert into crab_alert_record values(100, 100, 100, '1', 28.50, '1', '0', sysdate(), null, null, null, sysdate());
-insert into crab_alert_record values(101, 101, 104, '3', 8.50, '2', '1', sysdate(), sysdate(), 'admin', '已调整水质', sysdate());
+insert into crab_alert values(100, 100, 100, '1', 28.50, '1', '0', sysdate(), null, null, null, sysdate());
+insert into crab_alert values(101, 101, 104, '3', 8.50, '2', '1', sysdate(), sysdate(), 'admin', '已调整水质', sysdate());
 
 -- 养殖池维护记录
-insert into crab_maintenance_record values(100, 100, '水质调节', sysdate(), 'admin', 500.00, sysdate(), '定期水质维护');
-insert into crab_maintenance_record values(101, 101, '设备检修', sysdate(), 'admin', 300.00, sysdate(), '设备定期检修');
+insert into crab_maintenance values(100, 100, '水质调节', sysdate(), 'admin', 500.00, sysdate(), '定期水质维护');
+insert into crab_maintenance values(101, 101, '设备检修', sysdate(), 'admin', 300.00, sysdate(), '设备定期检修');
 
 -- 收获记录
-insert into crab_harvest_record values(100, 100, '2023-09-01', 450.00, 150.00, 90.00, 'admin', sysdate(), '秋季收获');
-insert into crab_harvest_record values(101, 101, '2023-09-15', 500.00, 145.00, 92.00, 'admin', sysdate(), '秋季收获');
+insert into crab_harvest values(100, 100, '2023-09-01', 450.00, 150.00, 90.00, 'admin', sysdate(), '秋季收获');
+insert into crab_harvest values(101, 101, '2023-09-15', 500.00, 145.00, 92.00, 'admin', sysdate(), '秋季收获');
 
 -- 养殖成本记录
-insert into crab_cost_record values(100, 100, '饲料成本', 5000.00, '2024-03-01', 'admin', sysdate(), '初始饲料采购');
-insert into crab_cost_record values(101, 100, '设备成本', 3000.00, '2024-03-01', 'admin', sysdate(), '监测设备采购');
-insert into crab_cost_record values(102, 101, '饲料成本', 6000.00, '2024-03-15', 'admin', sysdate(), '初始饲料采购'); 
+insert into crab_cost values(100, 100, '饲料成本', 5000.00, '2024-03-01', 'admin', sysdate(), '初始饲料采购');
+insert into crab_cost values(101, 100, '设备成本', 3000.00, '2024-03-01', 'admin', sysdate(), '监测设备采购');
+insert into crab_cost values(102, 101, '饲料成本', 6000.00, '2024-03-15', 'admin', sysdate(), '初始饲料采购'); 

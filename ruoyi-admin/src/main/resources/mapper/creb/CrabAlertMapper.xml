@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.web.creb.mapper.CrabAlertMapper">
+    
+    <resultMap type="CrabAlert" id="CrabAlertResult">
+        <result property="alertId"    column="alert_id"    />
+        <result property="poolId"    column="pool_id"    />
+        <result property="deviceId"    column="device_id"    />
+        <result property="alertType"    column="alert_type"    />
+        <result property="alertValue"    column="alert_value"    />
+        <result property="alertLevel"    column="alert_level"    />
+        <result property="alertStatus"    column="alert_status"    />
+        <result property="alertTime"    column="alert_time"    />
+        <result property="handleTime"    column="handle_time"    />
+        <result property="handleBy"    column="handle_by"    />
+        <result property="handleResult"    column="handle_result"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectCrabAlertVo">
+        select alert_id, pool_id, device_id, alert_type, alert_value, alert_level, alert_status, alert_time, handle_time, handle_by, handle_result, create_time from crab_alert
+    </sql>
+
+    <select id="selectCrabAlertList" parameterType="CrabAlert" resultMap="CrabAlertResult">
+        <include refid="selectCrabAlertVo"/>
+        <where>  
+            <if test="poolId != null "> and pool_id = #{poolId}</if>
+            <if test="deviceId != null "> and device_id = #{deviceId}</if>
+            <if test="alertType != null  and alertType != ''"> and alert_type = #{alertType}</if>
+            <if test="alertValue != null "> and alert_value = #{alertValue}</if>
+            <if test="alertLevel != null  and alertLevel != ''"> and alert_level = #{alertLevel}</if>
+            <if test="alertStatus != null  and alertStatus != ''"> and alert_status = #{alertStatus}</if>
+            <if test="alertTime != null "> and alert_time = #{alertTime}</if>
+            <if test="handleTime != null "> and handle_time = #{handleTime}</if>
+            <if test="handleBy != null  and handleBy != ''"> and handle_by = #{handleBy}</if>
+            <if test="handleResult != null  and handleResult != ''"> and handle_result = #{handleResult}</if>
+        </where>
+    </select>
+    
+    <select id="selectCrabAlertByAlertId" parameterType="Long" resultMap="CrabAlertResult">
+        <include refid="selectCrabAlertVo"/>
+        where alert_id = #{alertId}
+    </select>
+
+    <insert id="insertCrabAlert" parameterType="CrabAlert" useGeneratedKeys="true" keyProperty="alertId">
+        insert into crab_alert
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="poolId != null">pool_id,</if>
+            <if test="deviceId != null">device_id,</if>
+            <if test="alertType != null and alertType != ''">alert_type,</if>
+            <if test="alertValue != null">alert_value,</if>
+            <if test="alertLevel != null">alert_level,</if>
+            <if test="alertStatus != null">alert_status,</if>
+            <if test="alertTime != null">alert_time,</if>
+            <if test="handleTime != null">handle_time,</if>
+            <if test="handleBy != null">handle_by,</if>
+            <if test="handleResult != null">handle_result,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="poolId != null">#{poolId},</if>
+            <if test="deviceId != null">#{deviceId},</if>
+            <if test="alertType != null and alertType != ''">#{alertType},</if>
+            <if test="alertValue != null">#{alertValue},</if>
+            <if test="alertLevel != null">#{alertLevel},</if>
+            <if test="alertStatus != null">#{alertStatus},</if>
+            <if test="alertTime != null">#{alertTime},</if>
+            <if test="handleTime != null">#{handleTime},</if>
+            <if test="handleBy != null">#{handleBy},</if>
+            <if test="handleResult != null">#{handleResult},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCrabAlert" parameterType="CrabAlert">
+        update crab_alert
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="poolId != null">pool_id = #{poolId},</if>
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="alertType != null and alertType != ''">alert_type = #{alertType},</if>
+            <if test="alertValue != null">alert_value = #{alertValue},</if>
+            <if test="alertLevel != null">alert_level = #{alertLevel},</if>
+            <if test="alertStatus != null">alert_status = #{alertStatus},</if>
+            <if test="alertTime != null">alert_time = #{alertTime},</if>
+            <if test="handleTime != null">handle_time = #{handleTime},</if>
+            <if test="handleBy != null">handle_by = #{handleBy},</if>
+            <if test="handleResult != null">handle_result = #{handleResult},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where alert_id = #{alertId}
+    </update>
+
+    <delete id="deleteCrabAlertByAlertId" parameterType="Long">
+        delete from crab_alert where alert_id = #{alertId}
+    </delete>
+
+    <delete id="deleteCrabAlertByAlertIds" parameterType="String">
+        delete from crab_alert where alert_id in 
+        <foreach item="alertId" collection="array" open="(" separator="," close=")">
+            #{alertId}
+        </foreach>
+    </delete>
+</mapper>

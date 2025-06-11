@@ -127,3 +127,13 @@ xss:
   excludes: /system/notice
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+
+# EMQX 配置
+emqx:
+  broker: tcp://op.cdd9527.cn:5007
+  username: admin
+  password: QWer1024?
+  client-id: ruoyi-admin-client
+  clean-session: true
+  connection-timeout: 10
+  keep-alive-interval: 20

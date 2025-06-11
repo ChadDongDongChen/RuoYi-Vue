@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
@@ -21,6 +22,9 @@ import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.system.domain.SysConfig;
 import com.ruoyi.system.service.ISysConfigService;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 /**
  * 参数配置 信息操作处理
@@ -33,6 +37,9 @@ public class SysConfigController extends BaseController
 {
     @Autowired
     private ISysConfigService configService;
+
+    @Autowired
+    private MqttClient mqttClient;
 
     /**
      * 获取参数配置列表
@@ -129,5 +136,21 @@ public class SysConfigController extends BaseController
     {
         configService.resetConfigCache();
         return success();
+    }
+
+    /**
+     * 测试EMQX消息发布
+     */
+    @PostMapping("/system/config/mqtt/publish")
+    public String publishMqtt(@RequestParam String topic, @RequestParam String message) {
+        try {
+            MqttMessage mqttMessage = new MqttMessage(message.getBytes());
+            mqttMessage.setQos(1);
+            mqttClient.publish(topic, mqttMessage);
+            return "发布成功";
+        } catch (MqttException e) {
+            e.printStackTrace();
+            return "发布失败: " + e.getMessage();
+        }
     }
 }

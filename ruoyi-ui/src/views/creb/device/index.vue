@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="120px" style="margin-bottom: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; box-shadow: 0 2px 8px #f0f1f2;">
       <el-form-item label="设备名称" prop="deviceName">
         <el-input
           v-model="queryParams.deviceName"
@@ -31,7 +31,7 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
+    <el-row :gutter="10" class="mb8" style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
       <el-col :span="1.5">
         <el-button
           type="primary"
@@ -77,16 +77,32 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="deviceList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="deviceList" @selection-change="handleSelectionChange" stripe border style="margin-bottom: 10px;">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="设备ID" align="center" prop="deviceId" />
       <el-table-column label="设备名称" align="center" prop="deviceName" />
-      <el-table-column label="设备类型" align="center" prop="deviceType" />
+      <el-table-column label="设备类型" align="center" prop="deviceType" :formatter="deviceTypeFormat">
+        <template slot-scope="scope">
+          <el-tag type="info" effect="plain" style="margin-right: 4px;">
+            <i v-if="scope.row.deviceType=='1'" class="el-icon-sunny"></i>
+            <i v-else-if="scope.row.deviceType=='2'" class="el-icon-tint"></i>
+            <i v-else-if="scope.row.deviceType=='3'" class="el-icon-ice-cream"></i>
+            <i v-else-if="scope.row.deviceType=='4'" class="el-icon-odometer"></i>
+            {{ deviceTypeFormat(scope.row) }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="所属养殖池ID" align="center" prop="poolId" />
-      <el-table-column label="设备状态" align="center" prop="deviceStatus" />
+      <el-table-column label="设备状态" align="center" prop="deviceStatus" :formatter="deviceStatusFormat">
+        <template slot-scope="scope">
+          <el-tag :type="statusTagType(scope.row.deviceStatus)">
+            {{ deviceStatusFormat(scope.row) }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="最后在线时间" align="center" prop="lastOnlineTime" width="180">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.lastOnlineTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ scope.row.lastOnlineTime }}</span>
         </template>
       </el-table-column>
       <el-table-column label="备注" align="center" prop="remark" />
@@ -300,7 +316,21 @@ export default {
       this.download('creb/device/export', {
         ...this.queryParams
       }, `device_${new Date().getTime()}.xlsx`)
-    }
+    },
+    deviceTypeFormat(row) {
+      const map = { '1': '温度', '2': '湿度', '3': '水质', '4': '氧气' }
+      return map[row.deviceType] || row.deviceType
+    },
+    deviceStatusFormat(row) {
+      const map = { '0': '正常', '1': '故障', '2': '离线' }
+      return map[row.deviceStatus] || row.deviceStatus
+    },
+    statusTagType(status) {
+      if(status==='0') return 'success';
+      if(status==='1') return 'danger';
+      if(status==='2') return 'info';
+      return '';
+    },
   }
 }
 </script>

@@ -61,11 +61,10 @@
             <artifactId>ruoyi-generator</artifactId>
         </dependency>
 
-        <!-- EMQX MQTT 客户端依赖 -->
+        <!-- Spring Integration MQTT -->
         <dependency>
-            <groupId>org.eclipse.paho</groupId>
-            <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
-            <version>1.2.5</version>
+            <groupId>org.springframework.integration</groupId>
+            <artifactId>spring-integration-mqtt</artifactId>
         </dependency>
 
     </dependencies>

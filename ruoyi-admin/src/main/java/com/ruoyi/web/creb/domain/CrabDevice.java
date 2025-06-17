@@ -36,9 +36,10 @@ public class CrabDevice extends BaseEntity
     @Excel(name = "设备状态", readConverterExp = "0=正常,1=故障,2=离线")
     private String deviceStatus;
 
-    /** 最后在线时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "最后在线时间", width = 30, dateFormat = "yyyy-MM-dd")
+    /** 最后在线时间 时分秒*/
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "最后在线时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date lastOnlineTime;
 
     public void setDeviceId(Long deviceId) 

@@ -1,12 +1,14 @@
 '''
-实验名称：连接无线路由器
-版本：v1.0
-日期：2019.8
+实验名称：MQTT通信
+版本：v1.1
+日期：2021.8
 作者：01Studio
-说明：编程实现连接路由器，将IP地址等相关信息通过OLED显示（只支持2.4G网络）。
+说明：编程实现MQTT通信，实现发布数据。
+MQTT助手：http://www.tongxinmao.com/txm/webmqtt.php#collapseOne
 '''
 import network,time
-from machine import I2C,Pin
+from simple import MQTTClient #导入MQTT板块
+from machine import I2C,Pin,Timer
 from ssd1306 import SSD1306_I2C
 
 #初始化相关模块
@@ -46,13 +48,33 @@ def WIFI_Connect():
         #串口打印信息
         print('network information:', wlan.ifconfig())
 
-        #OLED数据显示
+        #OLED数据显示（如果没接OLED，请将下面代码屏蔽）
         oled.fill(0)   #清屏背景黑色
         oled.text('IP/Subnet/GW:',0,0)
         oled.text(wlan.ifconfig()[0], 0, 20)
         oled.text(wlan.ifconfig()[1],0,38)
         oled.text(wlan.ifconfig()[2],0,56)
         oled.show()
+        return True
 
-#执行WIFI连接函数
-WIFI_Connect()
+    else:
+        return False
+
+#发布数据任务
+def MQTT_Send(tim):
+    client.publish(TOPIC, 'Hello 01Studio!')
+
+#执行WIFI连接函数并判断是否已经连接成功
+if WIFI_Connect():
+
+    SERVER = 'op.cdd9527.cn'
+    PORT = 5007
+    CLIENT_ID = '01Studio-ESP832' # 客户端ID
+    TOPIC = '/public/01Studio/1' # TOPIC名称
+    client = MQTTClient(CLIENT_ID, SERVER, PORT)
+    client.connect()
+
+    #开启RTOS定时器，编号为-1,周期1000ms，执行socket通信接收任务
+    tim = Timer(-1)
+    tim.init(period=1000, mode=Timer.PERIODIC,callback=MQTT_Send)
+

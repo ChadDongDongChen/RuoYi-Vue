@@ -94,7 +94,7 @@
       <el-table-column label="数据值" align="center" prop="dataValue" />
       <el-table-column label="采集时间" align="center" prop="collectTime" width="180">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.collectTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ scope.row.collectTime }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">

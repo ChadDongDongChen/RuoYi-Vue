@@ -1,0 +1,15 @@
+FROM maven:latest AS build
+WORKDIR /workspace
+
+# 构建整个多模块工程，并只打包 ruoyi-admin（会通过 -am 自动构建依赖模块）
+COPY . .
+RUN mvn -pl ruoyi-admin -am package -DskipTests
+
+FROM eclipse-temurin:latest
+WORKDIR /app
+
+COPY --from=build /workspace/ruoyi-admin/target/ruoyi-admin.jar /app/ruoyi-admin.jar
+
+EXPOSE 9999
+ENTRYPOINT ["java","-jar","/app/ruoyi-admin.jar"]
+

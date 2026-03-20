@@ -1,0 +1,29 @@
+services:
+  backend:
+    container_name: ruoYi-backend
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    ports:
+      - "9999:9999"
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      # 代码里 ruoyi.profile 默认 /home/ruoyi/uploadPath
+      - ruoyi_upload:/home/ruoyi/uploadPath
+
+  frontend:
+    container_name: ruoYi-frontend
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+      args:
+        VUE_APP_BASE_API: /dev-api
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  ruoyi_upload:
+

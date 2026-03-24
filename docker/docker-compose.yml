@@ -1,7 +1,7 @@
 services:
   myfarm:
     container_name: myfarm
-    image: myfarm:latest
+    image: a765961515/myfarm:latest
     build:
       context: ..
       dockerfile: docker/Dockerfile.combined

@@ -8,6 +8,11 @@ RUN mvn -pl ruoyi-admin -am package -DskipTests
 FROM eclipse-temurin:latest
 WORKDIR /app
 
+# 安装字体库，解决验证码生成异常
+RUN apt-get update && \
+    apt-get install -y fontconfig fonts-dejavu && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /workspace/ruoyi-admin/target/ruoyi-admin.jar /app/ruoyi-admin.jar
 
 EXPOSE 9999

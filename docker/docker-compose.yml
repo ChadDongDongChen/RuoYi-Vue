@@ -6,7 +6,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.combined
     ports:
-      - "8080:80"  # 前端通过Nginx访问
+      - "8089:80"  # 前端通过Nginx访问
       - "9999:9999"  # 可选：直接访问后端（调试用）
     environment:
       TZ: Asia/Shanghai

@@ -10,6 +10,9 @@ services:
       - "9999:9999"  # 可选：直接访问后端（调试用）
     environment:
       TZ: Asia/Shanghai
+      AI_KF_BASE_URL: https://api.deepseek.com/v1
+      AI_KF_MODEL: deepseek-chat
+      AI_KF_API_KEY: ${AI_KF_API_KEY:-}
     volumes:
       # 代码里 ruoyi.profile 默认 /home/ruoyi/uploadPath
       - ruoyi_upload:/home/ruoyi/uploadPath

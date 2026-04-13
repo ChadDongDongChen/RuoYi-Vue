@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.web.kf.mapper.KfMessageMapper">
+
+    <resultMap type="KfMessage" id="KfMessageResult">
+        <result property="messageId" column="message_id"/>
+        <result property="msgid" column="msgid"/>
+        <result property="externalUserid" column="external_userid"/>
+        <result property="openKfid" column="open_kfid"/>
+        <result property="direction" column="direction"/>
+        <result property="msgtype" column="msgtype"/>
+        <result property="content" column="content"/>
+        <result property="sendTime" column="send_time"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="selectKfMessageVo">
+        select message_id, msgid, external_userid, open_kfid, direction, msgtype, content, send_time, create_time from kf_message
+    </sql>
+
+    <select id="selectKfMessageList" parameterType="KfMessage" resultMap="KfMessageResult">
+        <include refid="selectKfMessageVo"/>
+        <where>
+            <if test="externalUserid != null and externalUserid != ''">and external_userid = #{externalUserid}</if>
+            <if test="openKfid != null and openKfid != ''">and open_kfid = #{openKfid}</if>
+            <if test="direction != null and direction != ''">and direction = #{direction}</if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="selectKfMessageByMsgid" resultMap="KfMessageResult">
+        <include refid="selectKfMessageVo"/> where msgid = #{msgid}
+    </select>
+
+    <insert id="insertKfMessage" useGeneratedKeys="true" keyProperty="messageId">
+        insert into kf_message (msgid, external_userid, open_kfid, direction, msgtype, content, send_time, create_time)
+        values (#{msgid}, #{externalUserid}, #{openKfid}, #{direction}, #{msgtype}, #{content}, #{sendTime}, #{createTime})
+    </insert>
+</mapper>

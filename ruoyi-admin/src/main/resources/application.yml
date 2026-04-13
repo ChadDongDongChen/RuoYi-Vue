@@ -137,3 +137,21 @@ emqx:
   clean-session: true
   connection-timeout: 10
   keep-alive-interval: 20
+
+# 微信客服回调 + AI（secret/key 建议用环境变量覆盖）
+wecom:
+  kf:
+    enabled: true
+    corp-id: ${WECOM_KF_CORP_ID:1000002}
+    secret: ${WECOM_KF_SECRET:MWWgFa1ND4gr8J-elcJBBV8BSj1lW-cu2PVtDKKfAJk}
+    token: ${WECOM_KF_TOKEN:myfarmKfToken2026}
+    encoding-aes-key: ${WECOM_KF_AES_KEY:abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG}
+
+ai:
+  kf:
+    enabled: true
+    base-url: ${AI_KF_BASE_URL:https://api.deepseek.com/v1}
+    api-key: ${AI_KF_API_KEY:sk-1a8651759b2e4f8194d7372953d32771}
+    model: ${AI_KF_MODEL:deepseek-chat}
+    system-prompt: ${AI_KF_SYSTEM_PROMPT:你是热情专业的微信客服，用简短口语回复。若涉及价格以商品库为准，不要编造不存在的优惠。}
+    fallback-reply: ${AI_KF_FALLBACK:您好，我这边暂时无法查询，请稍后再发一次或联系人工客服。}

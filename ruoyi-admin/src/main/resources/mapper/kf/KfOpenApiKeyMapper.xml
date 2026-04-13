@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.web.kf.mapper.KfOpenApiKeyMapper">
+
+    <resultMap type="KfOpenApiKey" id="KfOpenApiKeyResult">
+        <result property="keyId" column="key_id"/>
+        <result property="apiKey" column="api_key"/>
+        <result property="apiSecret" column="api_secret"/>
+        <result property="name" column="name"/>
+        <result property="enabled" column="enabled"/>
+        <result property="expireTime" column="expire_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectVo">
+        select key_id, api_key, api_secret, name, enabled, expire_time,
+               create_by, create_time, update_by, update_time, remark from kf_open_api_key
+    </sql>
+
+    <select id="selectKfOpenApiKeyList" resultMap="KfOpenApiKeyResult">
+        <include refid="selectVo"/>
+        <where>
+            <if test="name != null and name != ''">and name like concat('%', #{name}, '%')</if>
+            <if test="enabled != null and enabled != ''">and enabled = #{enabled}</if>
+        </where>
+        order by key_id desc
+    </select>
+
+    <select id="selectKfOpenApiKeyByKeyId" resultMap="KfOpenApiKeyResult">
+        <include refid="selectVo"/> where key_id = #{keyId}
+    </select>
+
+    <select id="selectByApiKey" resultMap="KfOpenApiKeyResult">
+        <include refid="selectVo"/> where api_key = #{apiKey}
+    </select>
+
+    <select id="selectByApiSecret" resultMap="KfOpenApiKeyResult">
+        <include refid="selectVo"/>
+        where api_secret = #{apiSecret} and enabled = '0'
+        and (expire_time is null or expire_time &gt; now())
+    </select>
+
+    <insert id="insertKfOpenApiKey" useGeneratedKeys="true" keyProperty="keyId">
+        insert into kf_open_api_key (api_key, api_secret, name, enabled, expire_time, create_by, create_time, remark)
+        values (#{apiKey}, #{apiSecret}, #{name}, #{enabled}, #{expireTime}, #{createBy}, #{createTime}, #{remark})
+    </insert>
+
+    <update id="updateKfOpenApiKey">
+        update kf_open_api_key
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="enabled != null">enabled = #{enabled},</if>
+            <if test="expireTime != null">expire_time = #{expireTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where key_id = #{keyId}
+    </update>
+
+    <delete id="deleteKfOpenApiKeyByKeyId">delete from kf_open_api_key where key_id = #{keyId}</delete>
+</mapper>

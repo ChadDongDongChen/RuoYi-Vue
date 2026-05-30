@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.AiIdphotoSpecMapper">
+
+    <resultMap type="AiIdphotoSpec" id="AiIdphotoSpecResult">
+        <result property="specId"       column="spec_id"       />
+        <result property="specName"     column="spec_name"     />
+        <result property="widthPx"      column="width_px"      />
+        <result property="heightPx"     column="height_px"     />
+        <result property="widthMm"      column="width_mm"      />
+        <result property="heightMm"     column="height_mm"     />
+        <result property="price"        column="price"         />
+        <result property="sortOrder"    column="sort_order"    />
+        <result property="status"       column="status"        />
+        <result property="createBy"     column="create_by"     />
+        <result property="createTime"   column="create_time"   />
+        <result property="updateBy"     column="update_by"     />
+        <result property="updateTime"   column="update_time"   />
+        <result property="remark"       column="remark"        />
+    </resultMap>
+
+    <sql id="selectSpecVo">
+        select spec_id, spec_name, width_px, height_px, width_mm, height_mm, price, sort_order, status, create_by, create_time, update_by, update_time, remark
+        from ai_idphoto_spec
+    </sql>
+
+    <select id="selectAiIdphotoSpecList" parameterType="AiIdphotoSpec" resultMap="AiIdphotoSpecResult">
+        <include refid="selectSpecVo"/>
+        <where>
+            <if test="specName != null and specName != ''">
+                AND spec_name like concat('%', #{specName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        order by sort_order
+    </select>
+
+    <select id="selectEnabledSpecList" resultMap="AiIdphotoSpecResult">
+        <include refid="selectSpecVo"/>
+        where status = '0'
+        order by sort_order
+    </select>
+
+    <select id="selectAiIdphotoSpecById" parameterType="Long" resultMap="AiIdphotoSpecResult">
+        <include refid="selectSpecVo"/>
+        where spec_id = #{specId}
+    </select>
+
+    <insert id="insertAiIdphotoSpec" parameterType="AiIdphotoSpec" useGeneratedKeys="true" keyProperty="specId">
+        insert into ai_idphoto_spec
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="specName != null and specName != ''">spec_name,</if>
+            <if test="widthPx != null">width_px,</if>
+            <if test="heightPx != null">height_px,</if>
+            <if test="widthMm != null">width_mm,</if>
+            <if test="heightMm != null">height_mm,</if>
+            <if test="price != null">price,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="specName != null and specName != ''">#{specName},</if>
+            <if test="widthPx != null">#{widthPx},</if>
+            <if test="heightPx != null">#{heightPx},</if>
+            <if test="widthMm != null">#{widthMm},</if>
+            <if test="heightMm != null">#{heightMm},</if>
+            <if test="price != null">#{price},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateAiIdphotoSpec" parameterType="AiIdphotoSpec">
+        update ai_idphoto_spec
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="specName != null and specName != ''">spec_name = #{specName},</if>
+            <if test="widthPx != null">width_px = #{widthPx},</if>
+            <if test="heightPx != null">height_px = #{heightPx},</if>
+            <if test="widthMm != null">width_mm = #{widthMm},</if>
+            <if test="heightMm != null">height_mm = #{heightMm},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </trim>
+        where spec_id = #{specId}
+    </update>
+
+    <delete id="deleteAiIdphotoSpecById" parameterType="Long">
+        delete from ai_idphoto_spec where spec_id = #{specId}
+    </delete>
+
+    <delete id="deleteAiIdphotoSpecByIds" parameterType="Long">
+        delete from ai_idphoto_spec where spec_id in
+        <foreach item="specId" collection="array" open="(" separator="," close=")">
+            #{specId}
+        </foreach>
+    </delete>
+
+</mapper>

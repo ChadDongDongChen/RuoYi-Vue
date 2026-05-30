@@ -127,3 +127,9 @@ xss:
   excludes: /system/notice
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+
+# 微信小程序配置
+wechat:
+  miniapp:
+    appid: wxffdf9f83c9057239
+    secret: 5c87cf3de1b17ea003f33437f9519df8

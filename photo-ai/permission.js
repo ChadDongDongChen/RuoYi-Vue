@@ -1,7 +1,7 @@
 import { getToken } from '@/utils/auth'
 
 // 无需登录的页面白名单
-const whiteList = ['/pages/ai-idphoto/index']
+const whiteList = ['/pages/ai-idphoto/index', '/pages/login/index']
 
 // 全局路由守卫
 uni.addInterceptor('navigateTo', {

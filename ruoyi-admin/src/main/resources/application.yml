@@ -7,7 +7,7 @@ ruoyi:
   # 版权年份
   copyrightYear: 2025
   # 文件路径 示例（ Windows配置D:/ruoyi/uploadPath，Linux配置 /home/ruoyi/uploadPath）
-  profile: D:/ruoyi/uploadPath
+  profile: /home/ruoyi/uploadPath
   # 获取ip地址开关
   addressEnabled: false
   # 验证码类型 math 数字计算 char 字符验证
@@ -16,7 +16,7 @@ ruoyi:
 # 开发环境配置
 server:
   # 服务器的HTTP端口，默认为8080
-  port: 8080
+  port: 9999
   servlet:
     # 应用的访问路径
     context-path: /
@@ -128,8 +128,45 @@ xss:
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
 
-# 微信小程序配置
-wechat:
-  miniapp:
-    appid: wxffdf9f83c9057239
-    secret: 5c87cf3de1b17ea003f33437f9519df8
+# EMQX 配置
+emqx:
+  broker: tcp://op.cdd9527.cn:5007
+  username: admin
+  password: QWer1024?
+  client-id: ruoyi-admin-client
+  clean-session: true
+  connection-timeout: 10
+  keep-alive-interval: 20
+
+# 微信客服回调 + AI（secret/key 建议用环境变量覆盖）
+wecom:
+  kf:
+    enabled: true
+    corp-id: ${WECOM_KF_CORP_ID:1000002}
+    secret: ${WECOM_KF_SECRET:MWWgFa1ND4gr8J-elcJBBV8BSj1lW-cu2PVtDKKfAJk}
+    token: ${WECOM_KF_TOKEN:myfarmKfToken2026}
+    encoding-aes-key: ${WECOM_KF_AES_KEY:abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG}
+
+ai:
+  kf:
+    enabled: true
+    base-url: ${AI_KF_BASE_URL:https://api.deepseek.com/v1}
+    api-key: ${AI_KF_API_KEY:sk-1a8651759b2e4f8194d7372953d32771}
+    model: ${AI_KF_MODEL:deepseek-chat}
+    system-prompt: ${AI_KF_SYSTEM_PROMPT:你是热情专业的微信客服，用简短口语回复。若涉及价格以商品库为准，不要编造不存在的优惠。}
+    fallback-reply: ${AI_KF_FALLBACK:您好，我这边暂时无法查询，请稍后再发一次或联系人工客服。}
+
+# AI证件照配置
+photo:
+  # 微信小程序配置
+  wx:
+    app-id: ${PHOTO_WX_APP_ID:wxffdf9f83c9057239}
+    app-secret: ${PHOTO_WX_APP_SECRET:fedbfec222ab97abc0e70139b49ffd27}
+  # 阿里百炼 DashScope API
+  ai:
+    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api-key: sk-381c1675f8c34d0d95d51987c1a12dde
+    # wanx2.1-imageedit 用于图像编辑（换背景/美颜/正装）
+    model: wanx2.1-imageedit
+    # 人像分割模型（humanseg 是 DashScope 官方人像分割）
+    segment-model: humanseg

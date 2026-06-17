@@ -1,7 +1,6 @@
 // 应用全局配置
 module.exports = {
-  // baseUrl: 'https://api.cdd9527.cn',
-  baseUrl: 'http://127.0.0.1:8080',
+  baseUrl: 'http://127.0.0.1:9999',
   appInfo: {
     name: "photo-ai",
     version: "1.0.0",

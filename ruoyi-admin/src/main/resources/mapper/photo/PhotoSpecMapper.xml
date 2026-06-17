@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.web.photo.mapper.PhotoSpecMapper">
+
+    <resultMap type="PhotoSpec" id="PhotoSpecResult">
+        <result property="id"          column="id"           />
+        <result property="specName"    column="spec_name"    />
+        <result property="widthPx"     column="width_px"     />
+        <result property="heightPx"    column="height_px"    />
+        <result property="widthMm"     column="width_mm"     />
+        <result property="heightMm"    column="height_mm"    />
+        <result property="price"       column="price"        />
+        <result property="sortOrder"   column="sort_order"   />
+        <result property="enabled"     column="enabled"      />
+    </resultMap>
+
+    <sql id="selectSpecVo">
+        select id, spec_name, width_px, height_px, width_mm, height_mm, price, sort_order, enabled
+        from photo_spec
+    </sql>
+
+    <select id="selectEnabledSpecs" resultMap="PhotoSpecResult">
+        <include refid="selectSpecVo"/>
+        where enabled = 1
+        order by sort_order asc
+    </select>
+
+    <select id="selectSpecById" parameterType="Long" resultMap="PhotoSpecResult">
+        <include refid="selectSpecVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertSpec" parameterType="PhotoSpec" useGeneratedKeys="true" keyProperty="id">
+        insert into photo_spec
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="specName != null and specName != ''">spec_name,</if>
+            <if test="widthPx != null">width_px,</if>
+            <if test="heightPx != null">height_px,</if>
+            <if test="widthMm != null">width_mm,</if>
+            <if test="heightMm != null">height_mm,</if>
+            <if test="price != null">price,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="enabled != null">enabled,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="specName != null and specName != ''">#{specName},</if>
+            <if test="widthPx != null">#{widthPx},</if>
+            <if test="heightPx != null">#{heightPx},</if>
+            <if test="widthMm != null">#{widthMm},</if>
+            <if test="heightMm != null">#{heightMm},</if>
+            <if test="price != null">#{price},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="enabled != null">#{enabled},</if>
+        </trim>
+    </insert>
+
+    <update id="updateSpec" parameterType="PhotoSpec">
+        update photo_spec
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="specName != null and specName != ''">spec_name = #{specName},</if>
+            <if test="widthPx != null">width_px = #{widthPx},</if>
+            <if test="heightPx != null">height_px = #{heightPx},</if>
+            <if test="widthMm != null">width_mm = #{widthMm},</if>
+            <if test="heightMm != null">height_mm = #{heightMm},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="enabled != null">enabled = #{enabled},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSpecById" parameterType="Long">
+        delete from photo_spec where id = #{id}
+    </delete>
+</mapper>

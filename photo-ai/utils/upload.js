@@ -18,8 +18,11 @@ export function upload(options) {
       header['Authorization'] = 'Bearer ' + getToken()
     }
 
+    const finalUrl = options.baseUrl || baseUrl + options.url
+    console.log('uploadFile url:', finalUrl)
+    console.log('filePath:', options.filePath)
     uni.uploadFile({
-      url: options.baseUrl || baseUrl + options.url,
+      url: finalUrl,
       filePath: options.filePath,
       name: options.name || 'file',
       header: header,
@@ -33,6 +36,7 @@ export function upload(options) {
         }
       },
       fail: (error) => {
+        console.error('uploadFile fail:', error)
         reject(error)
       }
     })

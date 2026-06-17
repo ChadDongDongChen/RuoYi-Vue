@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import upload from '@/utils/upload'
+import { upload } from '@/utils/upload'
 
 // 查询可用规格列表
 export function getSpecList() {
@@ -12,8 +12,8 @@ export function uploadPhoto(data) {
 }
 
 // 生成证件照
-export function generateIdPhoto(data) {
-  return request({ url: '/app/ai/idphoto/generate', method: 'post', data })
+export function generateIdPhoto(data, options) {
+  return request({ url: '/app/ai/idphoto/generate', method: 'post', data, ...options })
 }
 
 // 支付订单

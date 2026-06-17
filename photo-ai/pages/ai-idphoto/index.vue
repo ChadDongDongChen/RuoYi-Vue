@@ -353,7 +353,12 @@ export default {
   methods: {
     loadSpecs() {
       getSpecList().then(res => {
-        this.specList = res.data || []
+        // 后端返回 id，前端统一用 specId
+        this.specList = (res.data || []).map(s => ({
+          specId: s.id,
+          specName: s.specName,
+          price: s.price
+        }))
         if (this.specList.length > 0 && !this.selectedSpec.specId) {
           this.selectedSpec = this.specList[0]
         }
@@ -403,6 +408,7 @@ export default {
     },
     async doUpload(filePath) {
       try {
+        console.log('doUpload filePath:', filePath)
         uni.showLoading({ title: '上传中...' })
         const res = await uploadPhoto({ filePath })
         this.uploadedImageUrl = res.url
@@ -410,7 +416,8 @@ export default {
         this.startGeneration()
       } catch (e) {
         uni.hideLoading()
-        uni.showToast({ title: '上传失败', icon: 'none' })
+        console.error('upload exception:', e)
+        uni.showToast({ title: '上传失败: ' + (e.errMsg || e.msg || JSON.stringify(e)), icon: 'none', duration: 3000 })
       }
     },
     startGeneration() {
@@ -442,19 +449,31 @@ export default {
     },
     async callGenerateAPI() {
       try {
+        // 确保已登录
+        if (!getToken()) {
+          uni.showLoading({ title: '登录中...' })
+          const loginOk = await this.wxLoginByCode()
+          uni.hideLoading()
+          if (!loginOk) {
+            this.generatingVisible = false
+            return
+          }
+        }
+        console.log('generate token:', getToken())
         const res = await generateIdPhoto({
           originalUrl: this.uploadedImageUrl,
           specId: this.selectedSpec.specId,
           background: this.selectedBackground,
           beauty: this.selectedBeauty,
           suit: this.selectedSuit
-        })
+        }, { timeout: 60000 })
         this.generatingVisible = false
         this.orderInfo = res.data
         this.resultVisible = true
       } catch (e) {
         this.generatingVisible = false
-        uni.showToast({ title: '生成失败，请重试', icon: 'none' })
+        console.error('generate exception:', e)
+        uni.showToast({ title: '生成失败: ' + (e.errMsg || e.msg || JSON.stringify(e)), icon: 'none', duration: 3000 })
       }
     },
     handlePay() {
@@ -495,10 +514,21 @@ export default {
           provider: 'weixin',
           success: async (res) => {
             try {
+              console.log('wxLogin code2Session code:', res.code)
               const loginRes = await wxLogin(res.code)
-              setToken(loginRes.data)
+              console.log('wxLogin response:', JSON.stringify(loginRes))
+              // token 在 data 或 msg 字段（取决于后端返回格式）
+              const token = loginRes.data || loginRes.msg
+              if (!token) {
+                uni.showToast({ title: '登录失败：未获取到token', icon: 'none' })
+                resolve(false)
+                return
+              }
+              setToken(token)
+              console.log('token set:', getToken())
               resolve(true)
             } catch (e) {
+              console.error('wxLogin error:', e)
               uni.showToast({ title: '微信登录失败', icon: 'none' })
               resolve(false)
             }

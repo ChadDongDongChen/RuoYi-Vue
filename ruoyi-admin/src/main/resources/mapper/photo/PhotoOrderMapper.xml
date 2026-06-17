@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.web.photo.mapper.PhotoOrderMapper">
+
+    <resultMap type="PhotoOrder" id="PhotoOrderResult">
+        <result property="id"                 column="id"                  />
+        <result property="orderNo"            column="order_no"            />
+        <result property="userId"             column="user_id"             />
+        <result property="originalImageUrl"   column="original_image_url"  />
+        <result property="specId"             column="spec_id"             />
+        <result property="specName"           column="spec_name"           />
+        <result property="background"         column="background"          />
+        <result property="beauty"             column="beauty"              />
+        <result property="suit"               column="suit"                />
+        <result property="resultImageUrl"     column="result_image_url"    />
+        <result property="status"             column="status"              />
+        <result property="payAmount"          column="pay_amount"          />
+        <result property="payTime"            column="pay_time"            />
+        <result property="payType"            column="pay_type"            />
+        <result property="createBy"           column="create_by"           />
+        <result property="createTime"         column="create_time"         />
+        <result property="updateBy"           column="update_by"           />
+        <result property="updateTime"         column="update_time"         />
+        <result property="remark"             column="remark"              />
+    </resultMap>
+
+    <sql id="selectOrderVo">
+        select id, order_no, user_id, original_image_url, spec_id, spec_name,
+               background, beauty, suit, result_image_url, status, pay_amount,
+               pay_time, pay_type, create_by, create_time, update_by, update_time, remark
+        from photo_order
+    </sql>
+
+    <select id="selectOrderByOrderNo" parameterType="String" resultMap="PhotoOrderResult">
+        <include refid="selectOrderVo"/>
+        where order_no = #{orderNo}
+    </select>
+
+    <select id="selectOrdersByUserId" resultMap="PhotoOrderResult">
+        <include refid="selectOrderVo"/>
+        where user_id = #{userId}
+        order by create_time desc
+    </select>
+
+    <insert id="insertOrder" parameterType="PhotoOrder" useGeneratedKeys="true" keyProperty="id">
+        insert into photo_order
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="orderNo != null and orderNo != ''">order_no,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="originalImageUrl != null">original_image_url,</if>
+            <if test="specId != null">spec_id,</if>
+            <if test="specName != null">spec_name,</if>
+            <if test="background != null">background,</if>
+            <if test="beauty != null">beauty,</if>
+            <if test="suit != null">suit,</if>
+            <if test="resultImageUrl != null">result_image_url,</if>
+            <if test="status != null">status,</if>
+            <if test="payAmount != null">pay_amount,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="orderNo != null and orderNo != ''">#{orderNo},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="originalImageUrl != null">#{originalImageUrl},</if>
+            <if test="specId != null">#{specId},</if>
+            <if test="specName != null">#{specName},</if>
+            <if test="background != null">#{background},</if>
+            <if test="beauty != null">#{beauty},</if>
+            <if test="suit != null">#{suit},</if>
+            <if test="resultImageUrl != null">#{resultImageUrl},</if>
+            <if test="status != null">#{status},</if>
+            <if test="payAmount != null">#{payAmount},</if>
+        </trim>
+    </insert>
+
+    <update id="updateOrder" parameterType="PhotoOrder">
+        update photo_order
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="originalImageUrl != null">original_image_url = #{originalImageUrl},</if>
+            <if test="resultImageUrl != null">result_image_url = #{resultImageUrl},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="payAmount != null">pay_amount = #{payAmount},</if>
+            <if test="payTime != null">pay_time = #{payTime},</if>
+            <if test="payType != null">pay_type = #{payType},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        update photo_order set status = #{status} where order_no = #{orderNo}
+    </update>
+</mapper>

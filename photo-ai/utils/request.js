@@ -36,13 +36,13 @@ const request = config => {
           return
         }
         const code = res.data.code || 200
-        const msg = errorCode[code] || res.data.msg || errorCode['default']
+        const msg = res.data.msg || errorCode[code] || errorCode['default']
         if (code === 401) {
           toast('登录状态已过期')
           reject('无效的会话，或者会话已过期，请重新登录。')
         } else if (code === 500) {
           toast(msg)
-          reject('500')
+          reject(msg)
         } else if (code !== 200) {
           toast(msg)
           reject(code)

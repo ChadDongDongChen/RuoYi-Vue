@@ -166,6 +166,10 @@ photo:
   ai:
     base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
     api-key: sk-381c1675f8c34d0d95d51987c1a12dde
+  # 支付配置
+  pay:
+    # 开发环境 true=模拟支付直接成功，正式环境改为 false 走真实付款
+    mock: ${PHOTO_PAY_MOCK:true}
     # wanx2.1-imageedit 用于图像编辑（换背景/美颜/正装）
     model: wanx2.1-imageedit
     # 人像分割模型（humanseg 是 DashScope 官方人像分割）

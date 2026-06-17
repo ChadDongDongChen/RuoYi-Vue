@@ -468,7 +468,7 @@ export default {
           suit: this.selectedSuit
         }, { timeout: 60000 })
         this.generatingVisible = false
-        this.orderInfo = res.data
+        this.orderInfo = res
         this.resultVisible = true
       } catch (e) {
         this.generatingVisible = false
@@ -504,7 +504,8 @@ export default {
         this.successVisible = true
       } catch (e) {
         this.paying = false
-        uni.showToast({ title: '支付失败', icon: 'none' })
+        console.error('pay error:', e)
+        uni.showToast({ title: '支付失败: ' + (e.errMsg || e.msg || JSON.stringify(e)), icon: 'none', duration: 3000 })
       }
     },
     wxLoginByCode() {

@@ -9,12 +9,16 @@ public class PhotoAiProperties
 {
     private Wx wx = new Wx();
     private Ai ai = new Ai();
+    private Pay pay = new Pay();
 
     public Wx getWx() { return wx; }
     public void setWx(Wx wx) { this.wx = wx; }
 
     public Ai getAi() { return ai; }
     public void setAi(Ai ai) { this.ai = ai; }
+
+    public Pay getPay() { return pay; }
+    public void setPay(Pay pay) { this.pay = pay; }
 
     public boolean isWxConfigured()
     {
@@ -58,5 +62,13 @@ public class PhotoAiProperties
 
         public String getSegmentModel() { return segmentModel; }
         public void setSegmentModel(String segmentModel) { this.segmentModel = segmentModel; }
+    }
+
+    public static class Pay
+    {
+        private Boolean mock = false;
+
+        public Boolean getMock() { return mock; }
+        public void setMock(Boolean mock) { this.mock = mock; }
     }
 }

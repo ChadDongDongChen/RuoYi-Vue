@@ -19,17 +19,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="payAmount"          column="pay_amount"          />
         <result property="payTime"            column="pay_time"            />
         <result property="payType"            column="pay_type"            />
-        <result property="createBy"           column="create_by"           />
-        <result property="createTime"         column="create_time"         />
-        <result property="updateBy"           column="update_by"           />
-        <result property="updateTime"         column="update_time"         />
-        <result property="remark"             column="remark"              />
     </resultMap>
 
     <sql id="selectOrderVo">
         select id, order_no, user_id, original_image_url, spec_id, spec_name,
                background, beauty, suit, result_image_url, status, pay_amount,
-               pay_time, pay_type, create_by, create_time, update_by, update_time, remark
+               pay_time, pay_type
         from photo_order
     </sql>
 

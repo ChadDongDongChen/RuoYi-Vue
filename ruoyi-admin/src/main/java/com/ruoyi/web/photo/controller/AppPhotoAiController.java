@@ -93,7 +93,6 @@ public class AppPhotoAiController extends BaseController
     public AjaxResult generate(@RequestBody GenerateRequest req)
     {
         Long userId = getCurrentUserId();
-        // 小程序环境下允许未登录用户生成（userId为null时使用0L占位）
         if (userId == null)
         {
             log.info("generate without auth, using guest userId");
@@ -120,16 +119,18 @@ public class AppPhotoAiController extends BaseController
         order.setPayAmount(spec.getPrice());
         order.setStatus("pending");
 
-        String resultUrl = callAiGenerate(order, spec);
-        order.setResultImageUrl(resultUrl);
-        order.setStatus(resultUrl != null ? "pending" : "failed");
-
-        photoOrderService.createOrder(order);
-
-        if (resultUrl == null)
+        com.ruoyi.web.photo.service.IdPhotoResult aiResult = callAiGenerate(order, spec);
+        if (!aiResult.isSuccess())
         {
-            return error("AI 生成失败，请重试");
+            order.setStatus("failed");
+            photoOrderService.createOrder(order);
+            return error(aiResult.getErrorReason());
         }
+
+        String resultUrl = aiResult.getImageUrl();
+        order.setResultImageUrl(resultUrl);
+        order.setStatus("pending");
+        photoOrderService.createOrder(order);
 
         AjaxResult data = success();
         data.put("orderNo", orderNo);
@@ -160,9 +161,16 @@ public class AppPhotoAiController extends BaseController
             return error("无权操作此订单");
         }
 
-        photoOrderService.payOrder(order.getOrderNo());
+        // 开发环境：模拟支付直接成功
+        if (Boolean.TRUE.equals(photoAiProperties.getPay().getMock()))
+        {
+            log.info("[mock pay] order: {}, userId: {}", req.getOrderNo(), userId);
+            photoOrderService.payOrder(order.getOrderNo());
+            return success("支付成功（模拟）");
+        }
 
-        return success("支付成功");
+        // 正式环境：走真实付款（TODO: 接入微信支付）
+        return error("真实支付暂未开通");
     }
 
     @Anonymous
@@ -266,12 +274,13 @@ public class AppPhotoAiController extends BaseController
         return "PHOTO" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
     }
 
-    private String callAiGenerate(PhotoOrder order, PhotoSpec spec)
+    private com.ruoyi.web.photo.service.IdPhotoResult callAiGenerate(PhotoOrder order, PhotoSpec spec)
     {
         if (!photoAiProperties.isAiConfigured())
         {
             log.warn("AI not configured, using placeholder");
-            return "/profile/upload/ai-placeholder-" + order.getOrderNo() + ".jpg";
+            return new com.ruoyi.web.photo.service.IdPhotoResult(
+                "/profile/upload/ai-placeholder-" + order.getOrderNo() + ".jpg");
         }
 
         int widthPx = spec.getWidthPx() != null ? spec.getWidthPx() : 295;

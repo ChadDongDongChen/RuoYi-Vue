@@ -12,6 +12,7 @@ const request = config => {
   config.header = config.header || {}
   if (getToken() && !isToken) {
     config.header['Authorization'] = 'Bearer ' + getToken()
+    console.log('[request] Authorization header set for:', config.url)
   }
   // get请求映射params参数
   if (config.params) {

@@ -93,9 +93,11 @@ public class AppPhotoAiController extends BaseController
     public AjaxResult generate(@RequestBody GenerateRequest req)
     {
         Long userId = getCurrentUserId();
+        // 小程序环境下允许未登录用户生成（userId为null时使用0L占位）
         if (userId == null)
         {
-            return error("请先登录");
+            log.info("generate without auth, using guest userId");
+            userId = 0L;
         }
 
         PhotoSpec spec = photoSpecService.selectSpecById(req.getSpecId());
@@ -144,7 +146,8 @@ public class AppPhotoAiController extends BaseController
         Long userId = getCurrentUserId();
         if (userId == null)
         {
-            return error("请先登录");
+            log.info("pay without auth, using guest userId");
+            userId = 0L;
         }
 
         PhotoOrder order = photoOrderService.selectOrderByOrderNo(req.getOrderNo());
@@ -169,7 +172,8 @@ public class AppPhotoAiController extends BaseController
         Long userId = getCurrentUserId();
         if (userId == null)
         {
-            return error("请先登录");
+            log.info("getOrder without auth, using guest userId");
+            userId = 0L;
         }
 
         PhotoOrder order = photoOrderService.selectOrderByOrderNo(orderNo);
@@ -187,7 +191,8 @@ public class AppPhotoAiController extends BaseController
         Long userId = getCurrentUserId();
         if (userId == null)
         {
-            return error("请先登录");
+            log.info("orders without auth, using guest userId");
+            userId = 0L;
         }
 
         List<PhotoOrder> orders = photoOrderService.selectOrdersByUserId(userId);
@@ -245,10 +250,13 @@ public class AppPhotoAiController extends BaseController
         try
         {
             LoginUser loginUser = SecurityUtils.getLoginUser();
-            return loginUser != null ? loginUser.getUserId() : null;
+            Long userId = loginUser != null ? loginUser.getUserId() : null;
+            log.debug("getCurrentUserId: {}", userId);
+            return userId;
         }
         catch (Exception e)
         {
+            log.debug("getCurrentUserId error", e);
             return null;
         }
     }
@@ -277,7 +285,9 @@ public class AppPhotoAiController extends BaseController
             order.getOriginalImageUrl(),
             order.getBackground(),
             widthPx,
-            heightPx
+            heightPx,
+            order.getBeauty(),
+            order.getSuit()
         );
     }
 

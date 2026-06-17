@@ -1,13 +1,11 @@
 package com.ruoyi.web.photo.service;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.FileOutputStream;
+import java.io.File;
 import java.net.URL;
 import java.util.Base64;
-import javax.imageio.ImageIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,38 +32,40 @@ public class DashScopeImageService
     private PhotoAiProperties photoAiProperties;
 
     /**
-     * 证件照生成主流程：人像分割 → 换背景 → 尺寸裁剪
+     * 证件照生成：大模型分析 + 生成
+     * 1. qwen-vl-plus 分析自拍，提取人物特征
+     * 2. wan2.7-image 根据特征生成证件照
      */
-    public String generateIdPhoto(String originalImageUrl, String background, int widthPx, int heightPx)
+    public String generateIdPhoto(String originalImageUrl, String background, int widthPx, int heightPx,
+                                  String beauty, String suit)
     {
         try
         {
-            String base64Image = downloadAndEncodeBase64(originalImageUrl);
-            if (base64Image == null)
+            // Step 1: 用 qwen-vl-plus 分析自拍
+            String personDesc = analyzeSelfie(originalImageUrl, beauty, suit);
+            if (personDesc == null)
             {
-                log.error("failed to download original image: {}", originalImageUrl);
+                log.error("failed to analyze selfie");
                 return null;
             }
+            log.info("analyzed selfie: {}", personDesc);
 
-            // Step 1: 人像分割（获取mask）— 失败时降级使用原图
-            String maskBase64 = callSegmentation(base64Image);
-            if (maskBase64 == null)
-            {
-                log.warn("segmentation failed, fallback to original image");
-                maskBase64 = base64Image; // 降级：使用原图
-            }
+            // Step 2: 构建生成提示词
+            String prompt = buildGeneratePrompt(personDesc, background, beauty, suit);
+            log.info("generation prompt: {}", prompt);
 
-            // Step 2: 换背景色 + 尺寸裁剪
-            String resultBase64 = compositeWithBackground(base64Image, maskBase64, background, widthPx, heightPx);
-            if (resultBase64 == null)
+            // Step 3: 调用 wan2.7-image 生成证件照
+            String resultUrl = generateImage(prompt);
+            if (resultUrl == null)
             {
-                log.error("composite failed");
+                log.error("image generation failed");
                 return null;
             }
+            log.info("generated image url: {}", resultUrl);
 
-            // Step 3: 保存结果
-            String savedPath = saveBase64Image(resultBase64);
-            log.info("id photo generated: {}", savedPath);
+            // Step 4: 下载并保存
+            String savedPath = downloadAndSaveImage(resultUrl);
+            log.info("id photo saved: {}", savedPath);
             return savedPath;
         }
         catch (Exception e)
@@ -76,10 +76,279 @@ public class DashScopeImageService
     }
 
     /**
-     * 下载图片并转为 base64（Java 8 兼容）
+     * 用 qwen-vl-plus 分析自拍，提取人物特征
      */
-    private String downloadAndEncodeBase64(String imageUrl)
+    private String analyzeSelfie(String imageUrl, String beauty, String suit)
     {
+        String apiKey = photoAiProperties.getAi().getApiKey();
+        String baseUrl = photoAiProperties.getAi().getBaseUrl();
+        String url = baseUrl + "/chat/completions";
+
+        String analysisPrompt = "请详细描述这张自拍照片中的人物特征，包括：性别、年龄段（儿童/青少年/青年/中年/老年）、脸型、发型、肤色、眼镜等。只返回描述文本，不要其他内容。";
+
+        // 将本地 URL 转为 base64 data URI（DashScope 无法访问 localhost）
+        String imageDataUri = resolveImageUrl(imageUrl);
+        if (imageDataUri == null)
+        {
+            log.error("failed to resolve image: {}", imageUrl);
+            return null;
+        }
+
+        JSONObject body = new JSONObject();
+        body.put("model", "qwen-vl-plus");
+
+        JSONArray messages = new JSONArray();
+        JSONObject userMsg = new JSONObject();
+        userMsg.put("role", "user");
+
+        JSONArray content = new JSONArray();
+
+        // 图片（使用 base64 data URI）
+        JSONObject imgContent = new JSONObject();
+        imgContent.put("type", "image_url");
+        JSONObject imgUrl = new JSONObject();
+        imgUrl.put("url", imageDataUri);
+        imgContent.put("image_url", imgUrl);
+        content.add(imgContent);
+
+        // 文本
+        JSONObject textContent = new JSONObject();
+        textContent.put("type", "text");
+        textContent.put("text", analysisPrompt);
+        content.add(textContent);
+
+        userMsg.put("content", content);
+        messages.add(userMsg);
+        body.put("messages", messages);
+        body.put("max_tokens", 500);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer " + apiKey);
+
+        HttpEntity<String> entity = new HttpEntity<>(body.toJSONString(), headers);
+
+        try
+        {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+            JSONObject result = JSONObject.parseObject(response.getBody());
+            JSONArray choices = result.getJSONArray("choices");
+            if (choices != null && !choices.isEmpty())
+            {
+                return choices.getJSONObject(0).getJSONObject("message").getString("content");
+            }
+            log.error("analysis failed: {}", response.getBody());
+            return null;
+        }
+        catch (Exception e)
+        {
+            log.error("analyze selfie error", e);
+            return null;
+        }
+    }
+
+    /**
+     * 构建生成提示词
+     */
+    private String buildGeneratePrompt(String personDesc, String background, String beauty, String suit)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        // 证件照格式要求
+        sb.append("Professional ID photo, studio quality, ");
+
+        // 背景色
+        switch (background)
+        {
+            case "蓝底":
+                sb.append("solid blue background (#438EDB), ");
+                break;
+            case "红底":
+                sb.append("solid red background (#CF2533), ");
+                break;
+            case "白底":
+            default:
+                sb.append("solid white background, ");
+                break;
+        }
+
+        // 人物描述
+        if (personDesc != null && !personDesc.isEmpty())
+        {
+            sb.append(personDesc).append(", ");
+        }
+
+        // 服装
+        if ("男士正装".equals(suit))
+        {
+            sb.append("wearing dark business suit with white shirt and tie, ");
+        }
+        else if ("女士正装".equals(suit))
+        {
+            sb.append("wearing dark business suit with white blouse, ");
+        }
+
+        // 美颜
+        if ("精致".equals(beauty))
+        {
+            sb.append("smooth skin, natural beauty enhancement, ");
+        }
+        else if ("自然".equals(beauty))
+        {
+            sb.append("natural look, subtle skin enhancement, ");
+        }
+
+        // 证件照技术要求
+        sb.append("front-facing portrait, centered composition, ");
+        sb.append("head occupies 70% of frame, even studio lighting, ");
+        sb.append("sharp focus, high resolution, photorealistic");
+
+        return sb.toString();
+    }
+
+    /**
+     * 调用 DashScope 原生 API 生成图片（异步）
+     * 端点：POST /api/v1/services/aigc/text2image/image-synthesis
+     * 模型：wanx2.1-t2i-turbo
+     */
+    private String generateImage(String prompt)
+    {
+        String apiKey = photoAiProperties.getAi().getApiKey();
+        String url = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis";
+        log.info("calling DashScope native text2image API: {}", url);
+
+        JSONObject body = new JSONObject();
+        body.put("model", "wanx2.1-t2i-turbo");
+
+        JSONObject input = new JSONObject();
+        input.put("prompt", prompt);
+        body.put("input", input);
+
+        JSONObject parameters = new JSONObject();
+        parameters.put("n", 1);
+        parameters.put("size", "1024*1024");
+        body.put("parameters", parameters);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer " + apiKey);
+        headers.set("X-DashScope-Async", "enable");
+
+        HttpEntity<String> entity = new HttpEntity<>(body.toJSONString(), headers);
+
+        log.info("generation request body: {}", body.toJSONString());
+
+        try
+        {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+            log.info("generation response status: {}, body: {}", response.getStatusCode(), response.getBody());
+
+            JSONObject result = JSONObject.parseObject(response.getBody());
+
+            // 检查错误
+            String code = result.getString("code");
+            if (code != null)
+            {
+                log.error("generation error: code={}, message={}, request_id={}",
+                    code, result.getString("message"), result.getString("request_id"));
+                return null;
+            }
+
+            // 原生 API 返回：{"output": {"task_id": "...", "task_status": "PENDING"}}
+            JSONObject output = result.getJSONObject("output");
+            if (output != null)
+            {
+                String taskId = output.getString("task_id");
+                if (taskId != null)
+                {
+                    log.info("generation task created: {}, status: {}", taskId, output.getString("task_status"));
+                    return pollTaskResult(taskId);
+                }
+            }
+
+            log.error("generation no task_id: {}", response.getBody());
+            return null;
+        }
+        catch (Exception e)
+        {
+            log.error("generate image API call failed", e);
+            return null;
+        }
+    }
+
+    /**
+     * 轮询任务结果（DashScope 原生 API）
+     */
+    private String pollTaskResult(String taskId)
+    {
+        String url = "https://dashscope.aliyuncs.com/api/v1/tasks/" + taskId;
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + photoAiProperties.getAi().getApiKey());
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        for (int i = 0; i < 60; i++) // 最多等待 2 分钟
+        {
+            try
+            {
+                Thread.sleep(2000);
+                log.debug("polling task [{}] attempt {}/60", taskId, i + 1);
+                ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+                JSONObject result = JSONObject.parseObject(response.getBody());
+
+                // 检查顶层错误
+                String code = result.getString("code");
+                if (code != null)
+                {
+                    log.error("poll error: code={}, message={}", code, result.getString("message"));
+                    return null;
+                }
+
+                JSONObject output = result.getJSONObject("output");
+                if (output == null) continue;
+
+                String status = output.getString("task_status");
+                log.debug("task [{}] status: {}", taskId, status);
+
+                if ("SUCCEEDED".equals(status))
+                {
+                    JSONArray results = output.getJSONArray("results");
+                    if (results != null && !results.isEmpty())
+                    {
+                        String imgUrl = results.getJSONObject(0).getString("url");
+                        log.info("task [{}] succeeded, image url: {}", taskId, imgUrl);
+                        return imgUrl;
+                    }
+                    String resultUrl = output.getString("result_url");
+                    if (resultUrl != null)
+                    {
+                        log.info("task [{}] succeeded, result_url: {}", taskId, resultUrl);
+                    }
+                    return resultUrl;
+                }
+                else if ("FAILED".equals(status))
+                {
+                    log.error("generation task failed: code={}, message={}",
+                        output.getString("code"), output.getString("message"));
+                    return null;
+                }
+                // PENDING/RUNNING: continue polling
+            }
+            catch (Exception e)
+            {
+                log.error("poll task error", e);
+            }
+        }
+        log.error("generation task timeout after 60 polls");
+        return null;
+    }
+
+    /**
+     * 下载图片并保存到本地
+     */
+    private String downloadAndSaveImage(String imageUrl)
+    {
+        FileOutputStream fos = null;
         try
         {
             URL url = new URL(imageUrl);
@@ -92,294 +361,25 @@ public class DashScopeImageService
                 {
                     buffer.write(data, 0, nRead);
                 }
-                buffer.flush();
                 byte[] bytes = buffer.toByteArray();
-                return Base64.getEncoder().encodeToString(bytes);
+
+                String fileName = "idphoto_" + System.currentTimeMillis() + ".png";
+                String filePath = RuoYiConfig.getUploadPath() + "/" + fileName;
+
+                java.io.File dir = new java.io.File(RuoYiConfig.getUploadPath());
+                if (!dir.exists())
+                {
+                    dir.mkdirs();
+                }
+
+                fos = new FileOutputStream(filePath);
+                fos.write(bytes);
+                return "/profile/upload/" + fileName;
             }
         }
         catch (Exception e)
         {
-            log.error("download image failed: {}", imageUrl, e);
-            return null;
-        }
-    }
-
-    /**
-     * 调用阿里百炼人像分割 API
-     * DashScope 人像分割: 使用 wanx2.1-imageedit 的 async 接口
-     */
-    private String callSegmentation(String base64Image)
-    {
-        // 使用 DashScope wanx2.1-imageedit 异步接口
-        String url = "https://dashscope.aliyuncs.com/api/v1/services/aigc/image2image/image-synthesis";
-
-        JSONObject body = new JSONObject();
-        body.put("model", "wanx2.1-imageedit");
-
-        JSONObject input = new JSONObject();
-        // DashScope 要求 base64 不带 data URI 前缀
-        input.put("image", base64Image);
-        body.put("input", input);
-
-        // 背景移除/透明化
-        JSONObject parameters = new JSONObject();
-        parameters.put("style", "background_change");
-        body.put("parameters", parameters);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "Bearer " + photoAiProperties.getAi().getApiKey());
-        headers.set("X-DashScope-Async", "enable");
-
-        HttpEntity<String> entity = new HttpEntity<>(body.toJSONString(), headers);
-
-        log.info("calling DashScope segmentation API: model=wanx2.1-imageedit, url={}", url);
-
-        try
-        {
-            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
-            log.info("segmentation response: {}", response.getBody());
-            JSONObject result = JSONObject.parseObject(response.getBody());
-
-            // 异步任务返回 task_id
-            JSONObject output = result.getJSONObject("output");
-            if (output != null)
-            {
-                String taskId = output.getString("task_id");
-                if (taskId != null)
-                {
-                    log.info("segmentation task created: {}", taskId);
-                    return pollTaskResult(taskId);
-                }
-            }
-
-            // 检查错误
-            String code = result.getString("code");
-            String message = result.getString("message");
-            if (code != null)
-            {
-                log.error("segmentation error: code={}, message={}", code, message);
-                return null;
-            }
-
-            log.error("segmentation no task_id: {}", response.getBody());
-            return null;
-        }
-        catch (Exception e)
-        {
-            log.error("segmentation API call failed", e);
-            return null;
-        }
-    }
-
-    /**
-     * 轮询 DashScope 异步任务结果
-     */
-    private String pollTaskResult(String taskId)
-    {
-        String url = "https://dashscope.aliyuncs.com/api/v1/tasks/" + taskId;
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + photoAiProperties.getAi().getApiKey());
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        for (int i = 0; i < 30; i++)
-        {
-            try
-            {
-                Thread.sleep(2000);
-                ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-                JSONObject result = JSONObject.parseObject(response.getBody());
-
-                // 兼容模式格式: {"data": [{"url": "..."}], "status": "SUCCEEDED"}
-                JSONArray data = result.getJSONArray("data");
-                String status = result.getString("status");
-
-                if ("SUCCEEDED".equals(status) && data != null && !data.isEmpty())
-                {
-                    String resultUrl = data.getJSONObject(0).getString("url");
-                    if (resultUrl != null)
-                    {
-                        return downloadAndEncodeBase64(resultUrl);
-                    }
-                }
-
-                // 旧格式: {"output": {"task_status": "SUCCEEDED", "result_url": "..."}}
-                JSONObject output = result.getJSONObject("output");
-                if (output == null)
-                {
-                    continue;
-                }
-
-                String taskStatus = output.getString("task_status");
-
-                if ("SUCCEEDED".equals(taskStatus))
-                {
-                    // 从 results 数组获取
-                    JSONArray results = output.getJSONArray("results");
-                    if (results != null && !results.isEmpty())
-                    {
-                        String resultUrl = results.getJSONObject(0).getString("url");
-                        return downloadAndEncodeBase64(resultUrl);
-                    }
-                    // 或者直接从 result_url
-                    String resultUrl = output.getString("result_url");
-                    if (resultUrl != null)
-                    {
-                        return downloadAndEncodeBase64(resultUrl);
-                    }
-                    log.error("no result url in task output");
-                    return null;
-                }
-                else if ("FAILED".equals(taskStatus))
-                {
-                    log.error("segmentation task failed: {}", result.getString("message"));
-                    return null;
-                }
-                // PENDING/RUNNING: continue polling
-            }
-            catch (Exception e)
-            {
-                log.error("poll task error", e);
-            }
-        }
-        log.error("segmentation task timeout");
-        return null;
-    }
-
-    /**
-     * 将人像与背景色合成 + 尺寸裁剪
-     * 使用分割后的mask提取人像区域
-     * @param personBase64 原始图片 base64
-     * @param maskBase64 分割mask base64（失败时与原图相同）
-     */
-    private String compositeWithBackground(String personBase64, String maskBase64, String background, int width, int height)
-    {
-        try
-        {
-            byte[] personBytes = Base64.getDecoder().decode(personBase64);
-            BufferedImage personImg = ImageIO.read(new ByteArrayInputStream(personBytes));
-
-            if (personImg == null)
-            {
-                return null;
-            }
-
-            boolean hasValidMask = !maskBase64.equals(personBase64);
-            BufferedImage maskImg = null;
-            if (hasValidMask)
-            {
-                maskImg = ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode(maskBase64)));
-            }
-
-            // 创建目标尺寸的图片
-            BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-            // 设置背景色
-            java.awt.Color bgColor = parseBackground(background);
-            java.awt.Graphics2D g = result.createGraphics();
-            g.setColor(bgColor);
-            g.fillRect(0, 0, width, height);
-
-            // 按比例缩放并居中放置人像（证件照通常头部占70%）
-            int srcW = (maskImg != null) ? maskImg.getWidth() : personImg.getWidth();
-            int srcH = (maskImg != null) ? maskImg.getHeight() : personImg.getHeight();
-            double scale = Math.min((double) width / srcW, (double) height / srcH) * 0.85;
-            int newW = (int) (personImg.getWidth() * scale);
-            int newH = (int) (personImg.getHeight() * scale);
-            int offsetX = (width - newW) / 2;
-            int offsetY = (height - newH) / 2;
-
-            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-
-            if (hasValidMask && maskImg != null)
-            {
-                // 有有效mask：逐像素合成（只绘制人像区域）
-                // 先缩放person和mask到目标尺寸
-                BufferedImage scaledPerson = new BufferedImage(newW, newH, BufferedImage.TYPE_INT_RGB);
-                java.awt.Graphics2D pg = scaledPerson.createGraphics();
-                pg.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                pg.drawImage(personImg, 0, 0, newW, newH, null);
-                pg.dispose();
-
-                BufferedImage scaledMask = new BufferedImage(newW, newH, BufferedImage.TYPE_BYTE_GRAY);
-                java.awt.Graphics2D mg = scaledMask.createGraphics();
-                mg.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                mg.drawImage(maskImg, 0, 0, newW, newH, null);
-                mg.dispose();
-
-                // 逐像素合成
-                for (int y = 0; y < newH; y++)
-                {
-                    for (int x = 0; x < newW; x++)
-                    {
-                        int maskVal = scaledMask.getRGB(x, y) & 0xFF;
-                        if (maskVal > 128)
-                        {
-                            int px = Math.min(x + offsetX, width - 1);
-                            int py = Math.min(y + offsetY, height - 1);
-                            result.setRGB(px, py, scaledPerson.getRGB(x, y));
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // 降级模式：直接绘制原图
-                g.drawImage(personImg, offsetX, offsetY, newW, newH, null);
-            }
-            g.dispose();
-
-            // 编码为 base64
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(result, "jpg", baos);
-            return Base64.getEncoder().encodeToString(baos.toByteArray());
-        }
-        catch (Exception e)
-        {
-            log.error("composite error", e);
-            return null;
-        }
-    }
-
-    /**
-     * 解析背景色
-     */
-    private java.awt.Color parseBackground(String background)
-    {
-        switch (background)
-        {
-            case "蓝底": return new java.awt.Color(67, 142, 219);
-            case "红底": return new java.awt.Color(207, 37, 51);
-            case "白底":
-            default: return java.awt.Color.WHITE;
-        }
-    }
-
-    /**
-     * 保存 base64 图片到本地
-     */
-    private String saveBase64Image(String base64)
-    {
-        FileOutputStream fos = null;
-        try
-        {
-            byte[] bytes = Base64.getDecoder().decode(base64);
-            String fileName = "idphoto_" + System.currentTimeMillis() + ".jpg";
-            String filePath = RuoYiConfig.getUploadPath() + "/" + fileName;
-
-            java.io.File dir = new java.io.File(RuoYiConfig.getUploadPath());
-            if (!dir.exists())
-            {
-                dir.mkdirs();
-            }
-
-            fos = new FileOutputStream(filePath);
-            fos.write(bytes);
-            return "/profile/upload/" + fileName;
-        }
-        catch (Exception e)
-        {
-            log.error("save image error", e);
+            log.error("download and save image error: {}", imageUrl, e);
             return null;
         }
         finally
@@ -388,6 +388,96 @@ public class DashScopeImageService
             {
                 try { fos.close(); } catch (Exception ignored) {}
             }
+        }
+    }
+
+    /**
+     * 将图片 URL 转为 base64 data URI
+     * 如果是本地 URL（localhost/127.0.0.1），则读取本地文件并转 base64
+     * 否则直接返回原 URL
+     */
+    private String resolveImageUrl(String imageUrl)
+    {
+        if (imageUrl == null) return null;
+
+        // 检测是否为本地 URL
+        boolean isLocal = imageUrl.contains("localhost") || imageUrl.contains("127.0.0.1");
+
+        if (!isLocal)
+        {
+            // 公网 URL 直接返回
+            return imageUrl;
+        }
+
+        // 本地 URL：提取文件路径，读取文件转 base64
+        try
+        {
+            // URL: http://127.0.0.1:9999/profile/upload/2026/06/17/xxx.jpg
+            // 实际路径: D:/ruoyi/uploadPath/upload/2026/06/17/xxx.jpg
+            // /profile 是 URL 前缀，/upload 是实际子目录
+            String relativePath = imageUrl;
+
+            // 提取 /profile/upload/ 之后的路径
+            if (relativePath.contains("/profile/upload/"))
+            {
+                relativePath = relativePath.substring(relativePath.indexOf("/profile/upload/") + "/profile/upload/".length());
+            }
+            else if (relativePath.contains("/upload/"))
+            {
+                relativePath = relativePath.substring(relativePath.indexOf("/upload/") + "/upload/".length());
+            }
+
+            // 构建完整路径: getUploadPath() 已经包含 /upload，所以直接拼接日期/文件名
+            // getUploadPath() = D:/ruoyi/uploadPath/upload
+            String fullPath = RuoYiConfig.getUploadPath() + "/" + relativePath;
+            File file = new File(fullPath);
+
+            if (!file.exists())
+            {
+                // 尝试其他可能的路径
+                String[] fallbackBasePaths = {
+                    "D:/ruoyi/uploadPath/upload",
+                    System.getProperty("user.dir") + "/uploadPath/upload",
+                };
+
+                for (String basePath : fallbackBasePaths)
+                {
+                    if (basePath == null) continue;
+                    String candidatePath = basePath + "/" + relativePath;
+                    File candidate = new File(candidatePath);
+                    if (candidate.exists())
+                    {
+                        file = candidate;
+                        log.info("found image at fallback path: {}", candidatePath);
+                        break;
+                    }
+                }
+            }
+
+            if (!file.exists())
+            {
+                log.error("local image file not found, tried: {}, relativePath={}", fullPath, relativePath);
+                return null;
+            }
+
+            log.info("loading image from: {}", file.getAbsolutePath());
+
+            byte[] fileContent = java.nio.file.Files.readAllBytes(file.toPath());
+            String base64 = Base64.getEncoder().encodeToString(fileContent);
+
+            // 检测图片类型
+            String mimeType = "image/jpeg";
+            String lowerPath = file.getName().toLowerCase();
+            if (lowerPath.endsWith(".png")) mimeType = "image/png";
+            else if (lowerPath.endsWith(".gif")) mimeType = "image/gif";
+            else if (lowerPath.endsWith(".webp")) mimeType = "image/webp";
+
+            return "data:" + mimeType + ";base64," + base64;
+        }
+        catch (Exception e)
+        {
+            log.error("resolve image url error: {}", imageUrl, e);
+            return null;
         }
     }
 }
